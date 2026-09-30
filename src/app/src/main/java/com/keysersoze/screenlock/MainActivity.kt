@@ -30,7 +30,12 @@ class MainActivity : ComponentActivity() {
     private var tileMessage by mutableStateOf<String?>(null)
     private var pendingTilePrompt = false
 
-    private var immersiveShield by mutableStateOf(false)
+    private var shadeProtectionEnabled by mutableStateOf(false)
+    private var shadeAccessibilityEnabled by mutableStateOf(false)
+    private var showShadeProtectionHelp by mutableStateOf(false)
+    private var pendingShadeProtectionEnable = false
+    private var shadeProtectionMessage by mutableStateOf<String?>(null)
+
     private var autoUpdates by mutableStateOf(true)
     private var updateInfo by mutableStateOf<UpdateInfo?>(null)
     private var updateChecking by mutableStateOf(false)
@@ -61,7 +66,14 @@ class MainActivity : ComponentActivity() {
 
         UpdateManager.reconcileInstalledVersion(this)
         overlayEnabled = LockPreferences.canDrawOverlays(this)
-        immersiveShield = LockPreferences.immersiveShield(this)
+        shadeAccessibilityEnabled =
+            LockPreferences.isShadeProtectionAccessibilityEnabled(this)
+        shadeProtectionEnabled =
+            LockPreferences.shadeProtection(this) && shadeAccessibilityEnabled
+        if (!shadeAccessibilityEnabled) {
+            LockPreferences.setShadeProtection(this, false)
+        }
+
         autoUpdates = LockPreferences.autoUpdates(this)
         updateDownloading = UpdateManager.isInProgress(this)
 
@@ -70,12 +82,15 @@ class MainActivity : ComponentActivity() {
                 ScreenLockApp(
                     overlayEnabled = overlayEnabled,
                     showOverlayHelp = showOverlayHelp,
+                    showShadeProtectionHelp = showShadeProtectionHelp,
                     activationDelaySeconds = LockPreferences.activationDelaySeconds(this),
                     unlockSeconds = LockPreferences.unlockSeconds(this),
                     dimPercent = LockPreferences.dimPercent(this),
                     showHint = LockPreferences.showHint(this),
                     haptics = LockPreferences.haptics(this),
-                    immersiveShield = immersiveShield,
+                    shadeProtectionEnabled = shadeProtectionEnabled,
+                    shadeAccessibilityEnabled = shadeAccessibilityEnabled,
+                    shadeProtectionMessage = shadeProtectionMessage,
                     autoUpdates = autoUpdates,
                     currentVersion = BuildConfig.VERSION_NAME,
                     updateInfo = updateInfo,
@@ -94,6 +109,20 @@ class MainActivity : ComponentActivity() {
                         showOverlayHelp = false
                         openOverlaySettings()
                     },
+                    onDismissShadeProtectionHelp = {
+                        showShadeProtectionHelp = false
+                        pendingShadeProtectionEnable = false
+                    },
+                    onOpenShadeAccessibility = {
+                        showShadeProtectionHelp = false
+                        pendingShadeProtectionEnable = true
+                        openAccessibilitySettings()
+                    },
+                    onOpenAppInfo = {
+                        showShadeProtectionHelp = false
+                        pendingShadeProtectionEnable = false
+                        openAppInfo()
+                    },
                     onAddQuickTile = ::requestQuickTile,
                     onTestLock = ::startTestLock,
                     onActivationDelayChanged = {
@@ -103,10 +132,7 @@ class MainActivity : ComponentActivity() {
                     onDimPercentChanged = { LockPreferences.setDimPercent(this, it) },
                     onShowHintChanged = { LockPreferences.setShowHint(this, it) },
                     onHapticsChanged = { LockPreferences.setHaptics(this, it) },
-                    onImmersiveShieldChanged = {
-                        immersiveShield = it
-                        LockPreferences.setImmersiveShield(this, it)
-                    },
+                    onShadeProtectionChanged = ::setShadeProtection,
                     onAutoUpdatesChanged = {
                         autoUpdates = it
                         LockPreferences.setAutoUpdates(this, it)
@@ -149,14 +175,30 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
 
-        val wasEnabled = overlayEnabled
-        val enabledNow = LockPreferences.canDrawOverlays(this)
-        overlayEnabled = enabledNow
+        val wasOverlayEnabled = overlayEnabled
+        overlayEnabled = LockPreferences.canDrawOverlays(this)
 
-        if (!wasEnabled && enabledNow) {
+        if (!wasOverlayEnabled && overlayEnabled) {
             tileMessage =
                 "Perfetto: il permesso è attivo. Ora aggiungiamo Screen Lock alla tendina."
             pendingTilePrompt = true
+        }
+
+        val accessibilityNow =
+            LockPreferences.isShadeProtectionAccessibilityEnabled(this)
+        shadeAccessibilityEnabled = accessibilityNow
+
+        if (pendingShadeProtectionEnable && accessibilityNow) {
+            pendingShadeProtectionEnable = false
+            shadeProtectionEnabled = true
+            LockPreferences.setShadeProtection(this, true)
+            shadeProtectionMessage =
+                "Protezione tendina pronta: durante il lock Android proverà a richiudere subito la tendina."
+        } else if (!accessibilityNow && shadeProtectionEnabled) {
+            shadeProtectionEnabled = false
+            LockPreferences.setShadeProtection(this, false)
+            shadeProtectionMessage =
+                "Protezione tendina disattivata perché il servizio di Accessibilità non è più attivo."
         }
 
         updateDownloading = UpdateManager.isInProgress(this)
@@ -178,16 +220,57 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun startTestLock() {
-        if (immersiveShield) {
-            startActivity(
-                TouchShieldActivity.intent(this, TouchShieldActivity.ACTION_LOCK),
-            )
+    private fun setShadeProtection(enabled: Boolean) {
+        if (!enabled) {
+            pendingShadeProtectionEnable = false
+            shadeProtectionEnabled = false
+            LockPreferences.setShadeProtection(this, false)
+            shadeProtectionMessage = "Protezione tendina disattivata."
+            return
+        }
+
+        shadeAccessibilityEnabled =
+            LockPreferences.isShadeProtectionAccessibilityEnabled(this)
+
+        if (shadeAccessibilityEnabled) {
+            shadeProtectionEnabled = true
+            LockPreferences.setShadeProtection(this, true)
+            shadeProtectionMessage =
+                "Protezione tendina pronta: verrà usata solo mentre Screen Lock è attivo."
         } else {
-            ScreenLockOverlayService.start(
-                this,
-                ScreenLockOverlayService.ACTION_LOCK,
+            shadeProtectionEnabled = false
+            pendingShadeProtectionEnable = true
+            showShadeProtectionHelp = true
+        }
+    }
+
+    private fun startTestLock() {
+        ScreenLockOverlayService.start(
+            this,
+            ScreenLockOverlayService.ACTION_LOCK,
+        )
+    }
+
+    private fun openAccessibilitySettings() {
+        runCatching {
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        }.onFailure {
+            shadeProtectionMessage =
+                "Apri Impostazioni → Accessibilità → App scaricate e scegli “Screen Lock · Protezione tendina”."
+        }
+    }
+
+    private fun openAppInfo() {
+        runCatching {
+            startActivity(
+                Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.parse("package:$packageName"),
+                ),
             )
+        }.onFailure {
+            shadeProtectionMessage =
+                "Apri Impostazioni → App → Screen Lock per controllare le impostazioni con limitazioni."
         }
     }
 
@@ -231,6 +314,7 @@ class MainActivity : ComponentActivity() {
             UpdateManager.isInProgress(this) ||
             UpdateManager.isComplete(this)
         ) return
+
         runCatching {
             UpdateManager.enqueue(this, info)
         }.onSuccess {
