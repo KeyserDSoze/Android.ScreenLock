@@ -28,9 +28,17 @@ Screen Lock blocca i normali tocchi consegnati alle app sotto l'overlay. Il lock
 
 ## Branding
 
-Le risorse visuali generate per Screen Lock sono conservate nel repository. L'app usa una variante ottimizzata del nuovo lucchetto mint come adaptive launcher icon e come simbolo nella home, mentre l'illustrazione della videochiamata viene mostrata come hero nella schermata principale. La tile dei Comandi rapidi resta un'icona vettoriale monocromatica per rispettare il rendering di System UI.
+Le risorse visuali generate per Screen Lock sono conservate nel repository. Gli artwork generati sono conservati nel repository come asset di progetto. Dopo una regressione riscontrata nella v0.0.7, la UI e il launcher runtime sono stati ripristinati alla variante vettoriale stabile; gli asset restano disponibili per una futura reintegrazione dopo test su dispositivo. La tile dei Comandi rapidi resta un'icona vettoriale monocromatica per rispettare il rendering di System UI.
 
 Gli asset Android ottimizzati si trovano in `src/app/src/main/res/drawable-nodpi/`; un concept alternativo è conservato in `assets/branding/`.
+
+## Lingue
+
+Screen Lock segue per impostazione predefinita la lingua del sistema. Dalla schermata principale è possibile scegliere manualmente una lingua diversa; la preferenza resta salvata e, su Android 13+, viene sincronizzata anche con le lingue per-app del sistema.
+
+Lingue incluse: English, Italiano, Español, Français, Deutsch, Português, Русский, العربية, हिन्दी e 简体中文. Se la lingua di sistema non è tra quelle supportate, il fallback è l'inglese.
+
+La localizzazione copre UI principale, onboarding, updater, notifiche del foreground service, testo di sblocco, tile dei Comandi rapidi e descrizioni del servizio opzionale di Accessibilità.
 
 ## Sviluppo
 
