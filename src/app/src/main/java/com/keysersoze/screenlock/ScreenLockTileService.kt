@@ -18,7 +18,21 @@ class ScreenLockTileService : TileService() {
     override fun onClick() {
         super.onClick()
 
-        if (!LockPreferences.canDrawOverlays(this)) {
+        val active = ScreenLockRuntime.state != ScreenLockRuntime.LockState.IDLE
+        val immersive = LockPreferences.immersiveShield(this)
+
+        if (active) {
+            if (immersive) {
+                launchAndCollapse(
+                    TouchShieldActivity.intent(this, TouchShieldActivity.ACTION_UNLOCK),
+                )
+            } else {
+                launchAndCollapse(Intent(this, ToggleLockActivity::class.java))
+            }
+            return
+        }
+
+        if (!immersive && !LockPreferences.canDrawOverlays(this)) {
             val settingsIntent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:$packageName"),
@@ -27,35 +41,40 @@ class ScreenLockTileService : TileService() {
             return
         }
 
-        launchAndCollapse(Intent(this, ToggleLockActivity::class.java))
+        if (immersive) {
+            launchAndCollapse(
+                TouchShieldActivity.intent(this, TouchShieldActivity.ACTION_LOCK),
+            )
+        } else {
+            launchAndCollapse(Intent(this, ToggleLockActivity::class.java))
+        }
     }
 
     private fun updateTileState() {
         val tile = qsTile ?: return
-        val enabled = LockPreferences.canDrawOverlays(this)
-        val state = ScreenLockOverlayService.runtimeState()
+        val immersive = LockPreferences.immersiveShield(this)
+        val configured = immersive || LockPreferences.canDrawOverlays(this)
+        val state = ScreenLockRuntime.state
 
         tile.state = when {
-            !enabled -> Tile.STATE_UNAVAILABLE
-            state == ScreenLockOverlayService.LockState.LOCKED -> Tile.STATE_ACTIVE
-            state == ScreenLockOverlayService.LockState.ARMING -> Tile.STATE_ACTIVE
+            !configured -> Tile.STATE_UNAVAILABLE
+            state == ScreenLockRuntime.LockState.LOCKED -> Tile.STATE_ACTIVE
+            state == ScreenLockRuntime.LockState.ARMING -> Tile.STATE_ACTIVE
             else -> Tile.STATE_INACTIVE
         }
         tile.label = getString(R.string.quick_tile_label)
         tile.contentDescription = when {
-            !enabled -> getString(R.string.quick_tile_unavailable)
-            state == ScreenLockOverlayService.LockState.ARMING ->
-                "Screen Lock in attivazione"
-            state == ScreenLockOverlayService.LockState.LOCKED ->
-                "Screen Lock attivo"
-            else ->
-                "Screen Lock pronto"
+            !configured -> getString(R.string.quick_tile_unavailable)
+            state == ScreenLockRuntime.LockState.ARMING -> "Screen Lock in attivazione"
+            state == ScreenLockRuntime.LockState.LOCKED -> "Screen Lock attivo"
+            else -> "Screen Lock pronto"
         }
         if (Build.VERSION.SDK_INT >= 29) {
             tile.subtitle = when {
-                !enabled -> "Configura"
-                state == ScreenLockOverlayService.LockState.ARMING -> "Attivazione…"
-                state == ScreenLockOverlayService.LockState.LOCKED -> "Bloccato"
+                !configured -> "Configura"
+                state == ScreenLockRuntime.LockState.ARMING -> "Attivazione…"
+                state == ScreenLockRuntime.LockState.LOCKED -> "Bloccato"
+                immersive -> "Scudo"
                 else -> "Pronto"
             }
         }
@@ -67,7 +86,11 @@ class ScreenLockTileService : TileService() {
         if (Build.VERSION.SDK_INT >= 34) {
             val pendingIntent = PendingIntent.getActivity(
                 this,
-                if (intent.component?.className == ToggleLockActivity::class.java.name) 101 else 102,
+                when (intent.component?.className) {
+                    ToggleLockActivity::class.java.name -> 101
+                    TouchShieldActivity::class.java.name -> 103
+                    else -> 102
+                },
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
