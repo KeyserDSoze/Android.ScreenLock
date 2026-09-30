@@ -5,8 +5,8 @@
 ## Come funziona
 
 1. Installa l'APK dalla pagina **Releases**.
-2. Apri Screen Lock e abilita il suo servizio di accessibilità. Il servizio **non legge il contenuto dello schermo** (`canRetrieveWindowContent=false`): usa il permesso per creare un `TYPE_ACCESSIBILITY_OVERLAY` touchable sopra l'app corrente.
-3. Aggiungi **Screen Lock** ai Comandi rapidi Android dall'app o dal pannello di modifica delle tile.
+2. Apri Screen Lock e segui la configurazione guidata. Prima di aprire le Impostazioni Android, l'app spiega dove trovare **Screen Lock** e quale interruttore attivare. Il servizio **non legge il contenuto dello schermo** (`canRetrieveWindowContent=false`): usa il permesso per creare un `TYPE_ACCESSIBILITY_OVERLAY` touchable sopra l'app corrente.
+3. Quando torni nell'app dopo l'abilitazione, su Android 13+ Screen Lock richiede automaticamente di aggiungere il pulsante ai **Comandi rapidi**. Sulle versioni precedenti mostra le istruzioni per aggiungerlo manualmente.
 4. Avvia la chiamata in Telegram (o qualunque altra app), abbassa i Comandi rapidi e tocca **Screen Lock**.
 5. Il pannello viene richiuso; dopo il ritardo configurato (2 secondi di default) compare un overlay quasi trasparente che assorbe i tocchi e mantiene lo schermo acceso.
 6. Il bersaglio di sblocco è visibile per un istante e poi diventa molto discreto. Per sbloccare, tieni premuto **al centro dello schermo** per il tempo configurato (6 secondi di default). Movimento eccessivo, rilascio o multitouch annullano il conteggio.
