@@ -7,6 +7,9 @@ val semanticVersion = rootProject.projectDir.parentFile.resolve("VERSION").readT
 val versionParts = semanticVersion.split('.').map(String::toInt)
 require(versionParts.size == 3) { "VERSION must be MAJOR.MINOR.PATCH" }
 
+val signingKeyPath = System.getenv("SCREENLOCK_KEYSTORE_PATH")
+val signingKeyPassword = System.getenv("SCREENLOCK_KEYSTORE_PASSWORD")
+
 android {
     namespace = "com.keysersoze.screenlock"
     compileSdk = 37
@@ -31,7 +34,24 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    signingConfigs {
+        if (!signingKeyPath.isNullOrBlank() && !signingKeyPassword.isNullOrBlank()) {
+            create("stableRelease") {
+                storeFile = file(signingKeyPath)
+                storePassword = signingKeyPassword
+                keyAlias = "screenlock"
+                keyPassword = signingKeyPassword
+            }
+        }
+    }
+
     buildTypes {
+        debug {
+            if (signingConfigs.names.contains("stableRelease")) {
+                signingConfig = signingConfigs.getByName("stableRelease")
+            }
+        }
+
         release {
             isMinifyEnabled = true
             isShrinkResources = true
