@@ -22,7 +22,6 @@ import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import kotlin.math.min
 
 class ScreenLockOverlayService : Service() {
 
@@ -116,6 +115,8 @@ class ScreenLockOverlayService : Service() {
             dimPercent = LockPreferences.dimPercent(this),
             showHint = LockPreferences.showHint(this),
             haptics = LockPreferences.haptics(this),
+            unlockRadiusDp = LockPreferences.unlockRadiusDp(this),
+            unlockPosition = LockPreferences.unlockPosition(this),
             onUnlock = ::finishLock,
         )
 
@@ -238,13 +239,15 @@ class ScreenLockOverlayService : Service() {
         private val dimPercent: Int,
         private val showHint: Boolean,
         private val haptics: Boolean,
+        unlockRadiusDp: Int,
+        private val unlockPosition: UnlockTargetPosition,
         private val onUnlock: () -> Unit,
     ) : View(context) {
 
         private val density = resources.displayMetrics.density
         private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        private val targetRadius = 70f * density
-        private val travelTolerance = 28f * density
+        private val targetRadius = unlockRadiusDp.coerceIn(40, 120) * density
+        private val travelTolerance = maxOf(28f * density, targetRadius * 0.38f)
         private val tracker = UnlockGestureTracker(targetRadius, travelTolerance)
         private val activatedAt = SystemClock.uptimeMillis()
         private var holdStartedAt = 0L
@@ -273,8 +276,7 @@ class ScreenLockOverlayService : Service() {
         }
 
         override fun onTouchEvent(event: MotionEvent): Boolean {
-            val cx = width / 2f
-            val cy = height / 2f
+            val (cx, cy) = targetCenter()
 
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
@@ -320,9 +322,8 @@ class ScreenLockOverlayService : Service() {
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
             val now = SystemClock.uptimeMillis()
-            val cx = width / 2f
-            val cy = height / 2f
-            val radius = min(targetRadius, min(width, height) * 0.20f)
+            val (cx, cy) = targetCenter()
+            val radius = targetRadius
 
             val dimAlpha = (255 * (dimPercent / 100f)).toInt().coerceIn(0, 255)
             canvas.drawColor(Color.argb(dimAlpha, 0, 0, 0))
@@ -393,6 +394,50 @@ class ScreenLockOverlayService : Service() {
             if (introVisible && !tracker.isHolding) {
                 postInvalidateDelayed(80L)
             }
+        }
+
+        private fun targetCenter(): Pair<Float, Float> {
+            val sidePadding = 24f * density
+            val topPadding = 48f * density
+            val bottomPadding = 64f * density
+
+            val left = (targetRadius + sidePadding).coerceAtMost(width / 2f)
+            val centerX = width / 2f
+            val right = (width - targetRadius - sidePadding).coerceAtLeast(width / 2f)
+
+            val top = (targetRadius + topPadding).coerceAtMost(height / 2f)
+            val centerY = height / 2f
+            val bottom = (height - targetRadius - bottomPadding).coerceAtLeast(height / 2f)
+
+            val x = when (unlockPosition) {
+                UnlockTargetPosition.TOP_LEFT,
+                UnlockTargetPosition.CENTER_LEFT,
+                UnlockTargetPosition.BOTTOM_LEFT -> left
+
+                UnlockTargetPosition.TOP_CENTER,
+                UnlockTargetPosition.CENTER,
+                UnlockTargetPosition.BOTTOM_CENTER -> centerX
+
+                UnlockTargetPosition.TOP_RIGHT,
+                UnlockTargetPosition.CENTER_RIGHT,
+                UnlockTargetPosition.BOTTOM_RIGHT -> right
+            }
+
+            val y = when (unlockPosition) {
+                UnlockTargetPosition.TOP_LEFT,
+                UnlockTargetPosition.TOP_CENTER,
+                UnlockTargetPosition.TOP_RIGHT -> top
+
+                UnlockTargetPosition.CENTER_LEFT,
+                UnlockTargetPosition.CENTER,
+                UnlockTargetPosition.CENTER_RIGHT -> centerY
+
+                UnlockTargetPosition.BOTTOM_LEFT,
+                UnlockTargetPosition.BOTTOM_CENTER,
+                UnlockTargetPosition.BOTTOM_RIGHT -> bottom
+            }
+
+            return x to y
         }
 
         private fun drawLock(canvas: Canvas, cx: Float, cy: Float, alpha: Int) {
