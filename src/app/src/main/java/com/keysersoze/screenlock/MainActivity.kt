@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
             ScreenLockTheme {
                 ScreenLockApp(
                     accessibilityEnabled = accessibilityEnabled,
+                    activationDelaySeconds = LockPreferences.activationDelaySeconds(this),
                     unlockSeconds = LockPreferences.unlockSeconds(this),
                     dimPercent = LockPreferences.dimPercent(this),
                     showHint = LockPreferences.showHint(this),
@@ -42,6 +43,9 @@ class MainActivity : ComponentActivity() {
                             this,
                             ScreenLockAccessibilityService.ACTION_LOCK,
                         )
+                    },
+                    onActivationDelayChanged = {
+                        LockPreferences.setActivationDelaySeconds(this, it)
                     },
                     onUnlockSecondsChanged = { LockPreferences.setUnlockSeconds(this, it) },
                     onDimPercentChanged = { LockPreferences.setDimPercent(this, it) },
