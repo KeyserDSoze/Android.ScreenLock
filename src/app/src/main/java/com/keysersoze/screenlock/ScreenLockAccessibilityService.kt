@@ -2,6 +2,7 @@ package com.keysersoze.screenlock
 
 import android.accessibilityservice.AccessibilityService
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -11,33 +12,51 @@ import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.RectF
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
+import android.service.quicksettings.TileService
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
-import kotlin.math.hypot
 import kotlin.math.min
 
 class ScreenLockAccessibilityService : AccessibilityService() {
 
+    enum class LockState {
+        IDLE,
+        ARMING,
+        LOCKED,
+    }
+
     private val windowManager by lazy { getSystemService(WINDOW_SERVICE) as WindowManager }
+    private val handler = Handler(Looper.getMainLooper())
     private var overlay: LockOverlayView? = null
     private var receiverRegistered = false
+    private var lastShadeDismissAt = 0L
+
+    private val pendingLockRunnable = Runnable { showOverlay() }
 
     private val commandReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
-                ACTION_LOCK -> showOverlay()
+                ACTION_LOCK -> {
+                    cancelPendingLock()
+                    showOverlay()
+                }
+
                 ACTION_UNLOCK -> hideOverlay()
-                ACTION_TOGGLE -> if (overlay == null) showOverlay() else hideOverlay()
+                ACTION_TOGGLE -> toggleLock()
             }
         }
     }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
+        publishState(this, LockState.IDLE)
+
         if (receiverRegistered) return
         val filter = IntentFilter().apply {
             addAction(ACTION_LOCK)
@@ -51,24 +70,63 @@ class ScreenLockAccessibilityService : AccessibilityService() {
             registerReceiver(commandReceiver, filter)
         }
         receiverRegistered = true
-        LockPreferences.setLocked(this, false)
     }
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) = Unit
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (runtimeState() != LockState.LOCKED || event == null) return
+        if (Build.VERSION.SDK_INT < 31) return
+        if (event.packageName?.toString() != SYSTEM_UI_PACKAGE) return
+
+        val now = SystemClock.uptimeMillis()
+        if (now - lastShadeDismissAt < SHADE_DISMISS_THROTTLE_MS) return
+
+        lastShadeDismissAt = now
+        performGlobalAction(GLOBAL_ACTION_DISMISS_NOTIFICATION_SHADE)
+    }
 
     override fun onInterrupt() = Unit
 
     override fun onDestroy() {
+        cancelPendingLock()
         if (receiverRegistered) {
             runCatching { unregisterReceiver(commandReceiver) }
             receiverRegistered = false
         }
         hideOverlay()
+        publishState(this, LockState.IDLE)
         super.onDestroy()
+    }
+
+    private fun toggleLock() {
+        when {
+            overlay != null -> hideOverlay()
+            runtimeState() == LockState.ARMING -> hideOverlay()
+            else -> scheduleLock()
+        }
+    }
+
+    private fun scheduleLock() {
+        val delayMs = LockPreferences.activationDelaySeconds(this) * 1_000L
+        if (delayMs <= 0L) {
+            showOverlay()
+            return
+        }
+
+        cancelPendingLock()
+        publishState(this, LockState.ARMING)
+        handler.postDelayed(pendingLockRunnable, delayMs)
+    }
+
+    private fun cancelPendingLock() {
+        handler.removeCallbacks(pendingLockRunnable)
+        if (runtimeState() == LockState.ARMING) {
+            publishState(this, LockState.IDLE)
+        }
     }
 
     private fun showOverlay() {
         if (overlay != null) return
+        handler.removeCallbacks(pendingLockRunnable)
 
         val view = LockOverlayView(
             context = this,
@@ -98,17 +156,21 @@ class ScreenLockAccessibilityService : AccessibilityService() {
         runCatching {
             windowManager.addView(view, params)
             overlay = view
-            LockPreferences.setLocked(this, true)
+            publishState(this, LockState.LOCKED)
         }.onFailure {
             overlay = null
-            LockPreferences.setLocked(this, false)
+            publishState(this, LockState.IDLE)
         }
     }
 
     private fun hideOverlay() {
-        overlay?.let { view -> runCatching { windowManager.removeView(view) } }
+        handler.removeCallbacks(pendingLockRunnable)
+        overlay?.let { view ->
+            view.prepareForRemoval()
+            runCatching { windowManager.removeView(view) }
+        }
         overlay = null
-        LockPreferences.setLocked(this, false)
+        publishState(this, LockState.IDLE)
     }
 
     private class LockOverlayView(
@@ -122,16 +184,15 @@ class ScreenLockAccessibilityService : AccessibilityService() {
 
         private val density = resources.displayMetrics.density
         private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        private val targetRadius = 78f * density
-        private val travelTolerance = 42f * density
-        private var holding = false
+        private val targetRadius = 70f * density
+        private val travelTolerance = 28f * density
+        private val tracker = UnlockGestureTracker(targetRadius, travelTolerance)
+        private val activatedAt = SystemClock.uptimeMillis()
         private var holdStartedAt = 0L
-        private var downX = 0f
-        private var downY = 0f
 
         private val unlockRunnable = Runnable {
-            if (holding) {
-                holding = false
+            if (tracker.isHolding) {
+                tracker.cancel()
                 if (haptics) performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                 onUnlock()
             }
@@ -142,22 +203,34 @@ class ScreenLockAccessibilityService : AccessibilityService() {
             importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
         }
 
+        override fun onAttachedToWindow() {
+            super.onAttachedToWindow()
+            if (showHint) postInvalidateDelayed(HINT_FULL_VISIBILITY_MS)
+        }
+
+        override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+            super.onSizeChanged(w, h, oldw, oldh)
+            if (tracker.isHolding) cancelHold()
+        }
+
         override fun onTouchEvent(event: MotionEvent): Boolean {
+            val cx = width / 2f
+            val cy = height / 2f
+
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
-                    downX = event.x
-                    downY = event.y
-                    if (isInsideTarget(event.x, event.y)) startHold() else cancelHold()
+                    if (tracker.onDown(event.x, event.y, cx, cy)) {
+                        startHold()
+                    } else {
+                        cancelHold()
+                    }
                 }
 
                 MotionEvent.ACTION_POINTER_DOWN -> cancelHold()
 
                 MotionEvent.ACTION_MOVE -> {
-                    if (holding) {
-                        val moved = hypot(event.x - downX, event.y - downY)
-                        if (moved > travelTolerance || !isInsideTarget(event.x, event.y)) {
-                            cancelHold()
-                        }
+                    if (tracker.isHolding && !tracker.onMove(event.x, event.y, cx, cy)) {
+                        cancelHold()
                     }
                 }
 
@@ -166,15 +239,12 @@ class ScreenLockAccessibilityService : AccessibilityService() {
             return true
         }
 
-        private fun isInsideTarget(x: Float, y: Float): Boolean {
-            val cx = width / 2f
-            val cy = height / 2f
-            return hypot(x - cx, y - cy) <= targetRadius
+        fun prepareForRemoval() {
+            removeCallbacks(unlockRunnable)
+            tracker.cancel()
         }
 
         private fun startHold() {
-            if (holding) return
-            holding = true
             holdStartedAt = SystemClock.uptimeMillis()
             if (haptics) performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
             removeCallbacks(unlockRunnable)
@@ -183,32 +253,47 @@ class ScreenLockAccessibilityService : AccessibilityService() {
         }
 
         private fun cancelHold() {
-            if (!holding) return
-            holding = false
+            tracker.cancel()
             removeCallbacks(unlockRunnable)
             invalidate()
         }
 
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
+            val now = SystemClock.uptimeMillis()
             val cx = width / 2f
             val cy = height / 2f
-            val radius = min(targetRadius, min(width, height) * 0.22f)
+            val radius = min(targetRadius, min(width, height) * 0.20f)
 
-            val alpha = (255 * (dimPercent / 100f)).toInt().coerceIn(0, 255)
-            canvas.drawColor(Color.argb(alpha, 0, 0, 0))
+            val dimAlpha = (255 * (dimPercent / 100f)).toInt().coerceIn(0, 255)
+            canvas.drawColor(Color.argb(dimAlpha, 0, 0, 0))
 
-            paint.style = Paint.Style.FILL
-            paint.color = Color.argb(if (holding) 210 else 145, 8, 12, 18)
-            canvas.drawCircle(cx, cy, radius, paint)
+            val introVisible = showHint && now - activatedAt < HINT_FULL_VISIBILITY_MS
+            val ambientAlpha = when {
+                tracker.isHolding -> 215
+                introVisible -> 150
+                showHint -> 34
+                else -> 0
+            }
 
-            paint.style = Paint.Style.STROKE
-            paint.strokeWidth = 3f * density
-            paint.color = Color.argb(210, 184, 243, 210)
-            canvas.drawCircle(cx, cy, radius, paint)
+            if (ambientAlpha > 0) {
+                paint.style = Paint.Style.FILL
+                paint.color = Color.argb(ambientAlpha, 8, 12, 18)
+                canvas.drawCircle(cx, cy, radius, paint)
 
-            if (holding) {
-                val elapsed = (SystemClock.uptimeMillis() - holdStartedAt).coerceAtLeast(0L)
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = if (tracker.isHolding) 3f * density else 2f * density
+                paint.color = Color.argb(
+                    if (tracker.isHolding) 220 else ambientAlpha.coerceAtMost(115),
+                    184,
+                    243,
+                    210,
+                )
+                canvas.drawCircle(cx, cy, radius, paint)
+            }
+
+            if (tracker.isHolding) {
+                val elapsed = (now - holdStartedAt).coerceAtLeast(0L)
                 val progress = (elapsed.toFloat() / unlockDurationMs).coerceIn(0f, 1f)
                 paint.strokeWidth = 7f * density
                 paint.strokeCap = Paint.Cap.ROUND
@@ -219,26 +304,37 @@ class ScreenLockAccessibilityService : AccessibilityService() {
                 if (progress < 1f) postInvalidateOnAnimation()
             }
 
-            drawLock(canvas, cx, cy - 8f * density)
+            if (tracker.isHolding || ambientAlpha > 0) {
+                drawLock(
+                    canvas = canvas,
+                    cx = cx,
+                    cy = cy - 8f * density,
+                    alpha = if (tracker.isHolding) 255 else ambientAlpha.coerceAtLeast(50),
+                )
+            }
 
-            if (showHint) {
+            if (showHint && (introVisible || tracker.isHolding)) {
                 paint.style = Paint.Style.FILL
-                paint.color = Color.argb(225, 255, 255, 255)
+                paint.color = Color.argb(230, 255, 255, 255)
                 paint.textAlign = Paint.Align.CENTER
                 paint.textSize = 13f * resources.displayMetrics.scaledDensity
                 val seconds = unlockDurationMs / 1_000L
                 canvas.drawText(
-                    if (holding) "Continua a premere…" else "Tieni premuto ${seconds}s per sbloccare",
+                    if (tracker.isHolding) "Continua a premere…" else "Tieni premuto ${seconds}s per sbloccare",
                     cx,
                     cy + 46f * density,
                     paint,
                 )
             }
+
+            if (introVisible && !tracker.isHolding) {
+                postInvalidateDelayed(80L)
+            }
         }
 
-        private fun drawLock(canvas: Canvas, cx: Float, cy: Float) {
+        private fun drawLock(canvas: Canvas, cx: Float, cy: Float, alpha: Int) {
             val stroke = 4f * density
-            paint.color = Color.rgb(184, 243, 210)
+            paint.color = Color.argb(alpha.coerceIn(0, 255), 184, 243, 210)
             paint.strokeWidth = stroke
             paint.strokeCap = Paint.Cap.ROUND
             paint.style = Paint.Style.STROKE
@@ -260,7 +356,7 @@ class ScreenLockAccessibilityService : AccessibilityService() {
             )
             canvas.drawRoundRect(body, 7f * density, 7f * density, paint)
 
-            paint.color = Color.rgb(8, 12, 18)
+            paint.color = Color.argb(alpha.coerceIn(0, 255), 8, 12, 18)
             canvas.drawCircle(cx, cy + 9f * density, 4f * density, paint)
             canvas.drawRect(
                 cx - 2f * density,
@@ -276,6 +372,25 @@ class ScreenLockAccessibilityService : AccessibilityService() {
         const val ACTION_LOCK = "com.keysersoze.screenlock.action.LOCK"
         const val ACTION_UNLOCK = "com.keysersoze.screenlock.action.UNLOCK"
         const val ACTION_TOGGLE = "com.keysersoze.screenlock.action.TOGGLE"
+
+        private const val SYSTEM_UI_PACKAGE = "com.android.systemui"
+        private const val SHADE_DISMISS_THROTTLE_MS = 400L
+        private const val HINT_FULL_VISIBILITY_MS = 1_600L
+
+        @Volatile
+        private var state: LockState = LockState.IDLE
+
+        fun runtimeState(): LockState = state
+
+        private fun publishState(context: Context, newState: LockState) {
+            state = newState
+            runCatching {
+                TileService.requestListeningState(
+                    context,
+                    ComponentName(context, ScreenLockTileService::class.java),
+                )
+            }
+        }
 
         fun sendCommand(context: Context, action: String) {
             context.sendBroadcast(Intent(action).setPackage(context.packageName))
