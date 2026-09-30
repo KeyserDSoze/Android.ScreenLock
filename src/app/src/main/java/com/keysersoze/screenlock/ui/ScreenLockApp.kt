@@ -57,12 +57,15 @@ import com.keysersoze.screenlock.UpdateInfo
 fun ScreenLockApp(
     overlayEnabled: Boolean,
     showOverlayHelp: Boolean,
+    showShadeProtectionHelp: Boolean,
     activationDelaySeconds: Int,
     unlockSeconds: Int,
     dimPercent: Int,
     showHint: Boolean,
     haptics: Boolean,
-    immersiveShield: Boolean,
+    shadeProtectionEnabled: Boolean,
+    shadeAccessibilityEnabled: Boolean,
+    shadeProtectionMessage: String?,
     autoUpdates: Boolean,
     currentVersion: String,
     updateInfo: UpdateInfo?,
@@ -74,6 +77,9 @@ fun ScreenLockApp(
     onEnableOverlay: () -> Unit,
     onDismissOverlayHelp: () -> Unit,
     onOpenOverlaySettings: () -> Unit,
+    onDismissShadeProtectionHelp: () -> Unit,
+    onOpenShadeAccessibility: () -> Unit,
+    onOpenAppInfo: () -> Unit,
     onAddQuickTile: () -> Unit,
     onTestLock: () -> Unit,
     onActivationDelayChanged: (Int) -> Unit,
@@ -81,7 +87,7 @@ fun ScreenLockApp(
     onDimPercentChanged: (Int) -> Unit,
     onShowHintChanged: (Boolean) -> Unit,
     onHapticsChanged: (Boolean) -> Unit,
-    onImmersiveShieldChanged: (Boolean) -> Unit,
+    onShadeProtectionChanged: (Boolean) -> Unit,
     onAutoUpdatesChanged: (Boolean) -> Unit,
     onCheckUpdates: () -> Unit,
     onDownloadUpdate: () -> Unit,
@@ -91,6 +97,14 @@ fun ScreenLockApp(
         OverlayHelpDialog(
             onDismiss = onDismissOverlayHelp,
             onContinue = onOpenOverlaySettings,
+        )
+    }
+
+    if (showShadeProtectionHelp) {
+        ShadeProtectionHelpDialog(
+            onDismiss = onDismissShadeProtectionHelp,
+            onOpenAccessibility = onOpenShadeAccessibility,
+            onOpenAppInfo = onOpenAppInfo,
         )
     }
 
@@ -151,13 +165,15 @@ fun ScreenLockApp(
                         dimPercent = dimPercent,
                         showHint = showHint,
                         haptics = haptics,
-                        immersiveShield = immersiveShield,
+                        shadeProtectionEnabled = shadeProtectionEnabled,
+                        shadeAccessibilityEnabled = shadeAccessibilityEnabled,
+                        shadeProtectionMessage = shadeProtectionMessage,
                         onActivationDelayChanged = onActivationDelayChanged,
                         onUnlockSecondsChanged = onUnlockSecondsChanged,
                         onDimPercentChanged = onDimPercentChanged,
                         onShowHintChanged = onShowHintChanged,
                         onHapticsChanged = onHapticsChanged,
-                        onImmersiveShieldChanged = onImmersiveShieldChanged,
+                        onShadeProtectionChanged = onShadeProtectionChanged,
                     )
                 }
                 item { PrivacyCard() }
@@ -355,6 +371,61 @@ private fun OverlayHelpDialog(
 }
 
 @Composable
+private fun ShadeProtectionHelpDialog(
+    onDismiss: () -> Unit,
+    onOpenAccessibility: () -> Unit,
+    onOpenAppInfo: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Protezione tendina avanzata",
+                fontWeight = FontWeight.Bold,
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Questa protezione è opzionale. Mentre Screen Lock è attivo, usa un servizio di Accessibilità limitato alla UI di sistema per chiedere ad Android di richiudere la tendina notifiche appena viene aperta.",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    text = "Il servizio non legge il contenuto dello schermo e non analizza Telegram. Android lo mostra comunque nella sezione Accessibilità perché solo da lì è disponibile l’azione di chiusura della tendina.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Text(
+                    text = "Nella schermata Android cerca “Screen Lock · Protezione tendina”, aprila e attiva l’interruttore. Poi torna qui.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                )
+                Text(
+                    text = "Se la voce è grigia e compare “Controlled by Restricted Setting”, Android sta applicando la protezione per app installate fuori dallo store. In Info app cerca “Consenti impostazioni con limitazioni”. Su alcune ROM questa opzione può non essere disponibile.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = onOpenAccessibility) {
+                Text("Apri Accessibilità")
+            }
+        },
+        dismissButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(onClick = onOpenAppInfo) {
+                    Text("Info app")
+                }
+                TextButton(onClick = onDismiss) {
+                    Text("Non ora")
+                }
+            }
+        },
+    )
+}
+
+@Composable
 private fun UpdateCard(
     currentVersion: String,
     updateInfo: UpdateInfo?,
@@ -453,20 +524,21 @@ private fun SettingsCard(
     dimPercent: Int,
     showHint: Boolean,
     haptics: Boolean,
-    immersiveShield: Boolean,
+    shadeProtectionEnabled: Boolean,
+    shadeAccessibilityEnabled: Boolean,
+    shadeProtectionMessage: String?,
     onActivationDelayChanged: (Int) -> Unit,
     onUnlockSecondsChanged: (Int) -> Unit,
     onDimPercentChanged: (Int) -> Unit,
     onShowHintChanged: (Boolean) -> Unit,
     onHapticsChanged: (Boolean) -> Unit,
-    onImmersiveShieldChanged: (Boolean) -> Unit,
+    onShadeProtectionChanged: (Boolean) -> Unit,
 ) {
     var delay by remember(activationDelaySeconds) { mutableIntStateOf(activationDelaySeconds) }
     var seconds by remember(unlockSeconds) { mutableIntStateOf(unlockSeconds) }
     var dim by remember(dimPercent) { mutableFloatStateOf(dimPercent.toFloat()) }
     var hint by remember(showHint) { mutableStateOf(showHint) }
     var vibration by remember(haptics) { mutableStateOf(haptics) }
-    var shield by remember(immersiveShield) { mutableStateOf(immersiveShield) }
 
     AppCard {
         Text(
@@ -538,14 +610,23 @@ private fun SettingsCard(
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
 
         SwitchRow(
-            title = "Protezione tendina (sperimentale)",
-            subtitle = "Usa una schermata trasparente immersiva sopra la chiamata e nasconde le barre di sistema. Riduce gli swipe accidentali, ma Android può ancora mostrare barre transitorie con un gesto dal bordo.",
-            checked = shield,
-            onCheckedChange = {
-                shield = it
-                onImmersiveShieldChanged(it)
+            title = "Protezione tendina avanzata",
+            subtitle = if (shadeAccessibilityEnabled) {
+                "Quando Screen Lock è attivo, prova a richiudere subito notifiche e Comandi rapidi usando l’azione di sistema di Accessibilità."
+            } else {
+                "Richiede una configurazione opzionale in Accessibilità. Tocca per vedere cosa attivare e perché serve."
             },
+            checked = shadeProtectionEnabled,
+            onCheckedChange = onShadeProtectionChanged,
         )
+
+        AnimatedVisibility(visible = shadeProtectionMessage != null) {
+            Text(
+                text = shadeProtectionMessage.orEmpty(),
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
 
         SwitchRow(
             title = "Mostra istruzione al centro",
@@ -582,7 +663,7 @@ private fun PrivacyCard() {
             style = MaterialTheme.typography.bodyMedium,
         )
         Text(
-            text = "L’overlay copre le app ma resta sotto le finestre critiche di sistema: tendina notifiche, tasto Power, emergenze e alcune UI di sistema rimangono sotto il controllo di Android.",
+            text = "Il lock normale resta sotto le finestre critiche di sistema. La Protezione tendina avanzata può chiedere ad Android di richiudere notifiche e Comandi rapidi, ma Power, emergenze e altre UI di sicurezza restano sempre sotto il controllo del sistema.",
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
             style = MaterialTheme.typography.bodySmall,
         )
