@@ -109,4 +109,19 @@
     <string name="overlay_continue_press">继续按住…</string>
     <string name="overlay_hold_to_unlock_format">按住 %1$d 秒解锁</string>
     <string name="download_description">正在下载更新</string>
+    <string name="hero_image_content_description">Screen Lock 可防止视频通话中的误触</string>
+    <string name="unlock_radius_title">解锁目标半径</string>
+    <string name="dp_format">%1$d dp</string>
+    <string name="unlock_position_title">解锁目标位置</string>
+    <string name="unlock_position_desc">从屏幕的 9 个标准位置中选择一个。目标会与系统边缘保持安全距离。</string>
+    <string name="unlock_position_selected_format">已选择：%1$s</string>
+    <string name="unlock_position_top_left">左上</string>
+    <string name="unlock_position_top_center">上中</string>
+    <string name="unlock_position_top_right">右上</string>
+    <string name="unlock_position_center_left">左中</string>
+    <string name="unlock_position_center">正中</string>
+    <string name="unlock_position_center_right">右中</string>
+    <string name="unlock_position_bottom_left">左下</string>
+    <string name="unlock_position_bottom_center">下中</string>
+    <string name="unlock_position_bottom_right">右下</string>
 </resources>
