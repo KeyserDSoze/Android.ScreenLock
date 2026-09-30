@@ -109,4 +109,19 @@
     <string name="overlay_continue_press">Continuez à appuyer…</string>
     <string name="overlay_hold_to_unlock_format">Maintenez %1$ds pour déverrouiller</string>
     <string name="download_description">Téléchargement de la mise à jour</string>
+    <string name="hero_image_content_description">Screen Lock protège un appel vidéo des touchers accidentels</string>
+    <string name="unlock_radius_title">Rayon de la cible de déverrouillage</string>
+    <string name="dp_format">%1$d dp</string>
+    <string name="unlock_position_title">Position de la cible de déverrouillage</string>
+    <string name="unlock_position_desc">Choisissez l’une des 9 positions standard de l’écran. La cible garde une marge sûre par rapport aux bords système.</string>
+    <string name="unlock_position_selected_format">Sélectionnée : %1$s</string>
+    <string name="unlock_position_top_left">En haut à gauche</string>
+    <string name="unlock_position_top_center">En haut au centre</string>
+    <string name="unlock_position_top_right">En haut à droite</string>
+    <string name="unlock_position_center_left">Au centre à gauche</string>
+    <string name="unlock_position_center">Au centre</string>
+    <string name="unlock_position_center_right">Au centre à droite</string>
+    <string name="unlock_position_bottom_left">En bas à gauche</string>
+    <string name="unlock_position_bottom_center">En bas au centre</string>
+    <string name="unlock_position_bottom_right">En bas à droite</string>
 </resources>
