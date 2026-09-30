@@ -25,6 +25,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -47,10 +49,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.keysersoze.screenlock.AppLanguageOption
+import com.keysersoze.screenlock.R
 import com.keysersoze.screenlock.UpdateInfo
 
 @Composable
@@ -74,6 +79,8 @@ fun ScreenLockApp(
     updateReady: Boolean,
     updateMessage: String?,
     tileMessage: String?,
+    selectedLanguage: String,
+    languageOptions: List<AppLanguageOption>,
     onEnableOverlay: () -> Unit,
     onDismissOverlayHelp: () -> Unit,
     onOpenOverlaySettings: () -> Unit,
@@ -92,6 +99,7 @@ fun ScreenLockApp(
     onCheckUpdates: () -> Unit,
     onDownloadUpdate: () -> Unit,
     onInstallUpdate: () -> Unit,
+    onLanguageChanged: (String) -> Unit,
 ) {
     if (showOverlayHelp) {
         OverlayHelpDialog(
@@ -134,6 +142,13 @@ fun ScreenLockApp(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 item { Hero(overlayEnabled) }
+                item {
+                    LanguageCard(
+                        selectedLanguage = selectedLanguage,
+                        languageOptions = languageOptions,
+                        onLanguageChanged = onLanguageChanged,
+                    )
+                }
                 item {
                     SetupCard(
                         enabled = overlayEnabled,
@@ -179,7 +194,7 @@ fun ScreenLockApp(
                 item { PrivacyCard() }
                 item {
                     Text(
-                        text = "Screen Lock · semplice, locale, senza account",
+                        text = stringResource(R.string.footer),
                         modifier = Modifier.fillMaxWidth(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
                         textAlign = TextAlign.Center,
@@ -208,18 +223,18 @@ private fun Hero(enabled: Boolean) {
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                text = "Screen Lock",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = (-1.2f).sp,
             )
             Text(
-                text = "Blocca i tocchi, non la chiamata.",
+                text = stringResource(R.string.hero_tagline),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "Perfetto quando il telefono passa in mani piccole: Telegram resta visibile e attivo, mentre i tocchi sul contenuto vengono assorbiti.",
+                text = stringResource(R.string.hero_description),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.86f),
             )
@@ -251,10 +266,67 @@ private fun StatusPill(enabled: Boolean) {
                 ),
         )
         Text(
-            text = if (enabled) "Permesso overlay pronto" else "Passaggio 1 da completare",
+            text = if (enabled) stringResource(R.string.status_overlay_ready) else stringResource(R.string.status_step1_pending),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
         )
+    }
+}
+
+@Composable
+private fun LanguageCard(
+    selectedLanguage: String,
+    languageOptions: List<AppLanguageOption>,
+    onLanguageChanged: (String) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val systemLabel = stringResource(R.string.language_system)
+    val selectedLabel = if (selectedLanguage == "system") {
+        systemLabel
+    } else {
+        languageOptions.firstOrNull { it.code == selectedLanguage }?.nativeName ?: systemLabel
+    }
+
+    AppCard {
+        Text(
+            text = stringResource(R.string.language_title),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            text = stringResource(R.string.language_desc),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Box {
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { expanded = true },
+            ) {
+                Text(stringResource(R.string.language_selected_format, selectedLabel))
+            }
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                DropdownMenuItem(
+                    text = { Text(systemLabel) },
+                    onClick = {
+                        expanded = false
+                        onLanguageChanged("system")
+                    },
+                )
+                languageOptions.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option.nativeName) },
+                        onClick = {
+                            expanded = false
+                            onLanguageChanged(option.code)
+                        },
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -268,15 +340,15 @@ private fun SetupCard(
 ) {
     AppCard {
         Text(
-            text = "Configurazione guidata",
+            text = stringResource(R.string.setup_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
         )
         Text(
             text = if (enabled) {
-                "Passaggio 2 di 2 · Aggiungi il pulsante Screen Lock alla tendina dei Comandi rapidi. Su Android 13 o successivi comparirà direttamente la richiesta di sistema."
+                stringResource(R.string.setup_step2_desc)
             } else {
-                "Passaggio 1 di 2 · Consenti a Screen Lock di comparire sopra le altre app. È il solo permesso speciale necessario per intercettare i tocchi."
+                stringResource(R.string.setup_step1_desc)
             },
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
@@ -289,10 +361,10 @@ private fun SetupCard(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onEnableOverlay,
             ) {
-                Text("1 · Consenti sopra le altre app")
+                Text(stringResource(R.string.setup_allow_overlay))
             }
             Text(
-                text = "Non serve più abilitare Screen Lock in Accessibilità: così evitiamo anche il blocco “Controlled by Restricted Setting” degli APK installati da browser.",
+                text = stringResource(R.string.setup_overlay_base_note),
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -301,10 +373,10 @@ private fun SetupCard(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onAddQuickTile,
             ) {
-                Text("2 · Aggiungi pulsante alla tendina")
+                Text(stringResource(R.string.setup_add_tile))
             }
             Text(
-                text = "Poi, durante una chiamata, abbassa la tendina e tocca Screen Lock per bloccare i tocchi.",
+                text = stringResource(R.string.setup_after_tile),
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -312,7 +384,7 @@ private fun SetupCard(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onTestLock,
             ) {
-                Text("Prova il blocco adesso")
+                Text(stringResource(R.string.setup_test_lock))
             }
         }
 
@@ -335,23 +407,23 @@ private fun OverlayHelpDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Consenti l’overlay di Screen Lock",
+                text = stringResource(R.string.overlay_dialog_title),
                 fontWeight = FontWeight.Bold,
             )
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "Si aprirà la schermata Android per le app che possono comparire sopra le altre app. Il nome della voce può cambiare leggermente in base al telefono.",
+                    text = stringResource(R.string.overlay_dialog_intro),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    text = "1. Se Android mostra un elenco, scegli “Screen Lock”.\n\n2. Attiva “Consenti visualizzazione sopra altre app”, “Mostra sopra altre app” o la voce equivalente.\n\n3. Torna a Screen Lock.",
+                    text = stringResource(R.string.overlay_dialog_steps),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                 )
                 Text(
-                    text = "Android richiede che sia tu ad attivare questo permesso. Screen Lock lo usa solo per mettere una superficie touch sopra la chiamata; non legge ciò che c’è sullo schermo.",
+                    text = stringResource(R.string.overlay_dialog_note),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -359,12 +431,12 @@ private fun OverlayHelpDialog(
         },
         confirmButton = {
             Button(onClick = onContinue) {
-                Text("Apri impostazione Android")
+                Text(stringResource(R.string.open_android_setting))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Non ora")
+                Text(stringResource(R.string.not_now))
             }
         },
     )
@@ -380,28 +452,28 @@ private fun ShadeProtectionHelpDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Protezione tendina avanzata",
+                text = stringResource(R.string.shade_dialog_title),
                 fontWeight = FontWeight.Bold,
             )
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "Questa protezione è opzionale. Mentre Screen Lock è attivo, usa un servizio di Accessibilità limitato alla UI di sistema per chiedere ad Android di richiudere la tendina notifiche appena viene aperta.",
+                    text = stringResource(R.string.shade_dialog_intro),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    text = "Il servizio non legge il contenuto dello schermo e non analizza Telegram. Android lo mostra comunque nella sezione Accessibilità perché solo da lì è disponibile l’azione di chiusura della tendina.",
+                    text = stringResource(R.string.shade_dialog_privacy),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Text(
-                    text = "Nella schermata Android cerca “Screen Lock · Protezione tendina”, aprila e attiva l’interruttore. Poi torna qui.",
+                    text = stringResource(R.string.shade_dialog_steps),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                 )
                 Text(
-                    text = "Se la voce è grigia e compare “Controlled by Restricted Setting”, Android sta applicando la protezione per app installate fuori dallo store. In Info app cerca “Consenti impostazioni con limitazioni”. Su alcune ROM questa opzione può non essere disponibile.",
+                    text = stringResource(R.string.shade_dialog_restricted),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -409,16 +481,16 @@ private fun ShadeProtectionHelpDialog(
         },
         confirmButton = {
             Button(onClick = onOpenAccessibility) {
-                Text("Apri Accessibilità")
+                Text(stringResource(R.string.open_accessibility))
             }
         },
         dismissButton = {
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 TextButton(onClick = onOpenAppInfo) {
-                    Text("Info app")
+                    Text(stringResource(R.string.app_info))
                 }
                 TextButton(onClick = onDismiss) {
-                    Text("Non ora")
+                    Text(stringResource(R.string.not_now))
                 }
             }
         },
@@ -443,19 +515,19 @@ private fun UpdateCard(
 
     AppCard {
         Text(
-            text = "Aggiornamenti",
+            text = stringResource(R.string.updates_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
         )
         Text(
-            text = "Versione installata: $currentVersion",
+            text = stringResource(R.string.installed_version_format, currentVersion),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
         )
 
         SwitchRow(
-            title = "Aggiornamenti automatici",
-            subtitle = "Controlla GitHub all’avvio e scarica automaticamente una release più recente. Android chiederà comunque conferma prima dell’installazione.",
+            title = stringResource(R.string.auto_updates_title),
+            subtitle = stringResource(R.string.auto_updates_desc),
             checked = automatic,
             onCheckedChange = {
                 automatic = it
@@ -469,13 +541,13 @@ private fun UpdateCard(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = onInstall,
                 ) {
-                    Text("Installa aggiornamento")
+                    Text(stringResource(R.string.install_update))
                 }
             }
 
             downloading -> {
                 Text(
-                    text = "Download in corso…",
+                    text = stringResource(R.string.download_in_progress),
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.bodyMedium,
                 )
@@ -486,7 +558,7 @@ private fun UpdateCard(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = onDownload,
                 ) {
-                    Text("Scarica Screen Lock ${updateInfo.version}")
+                    Text(stringResource(R.string.download_version_format, updateInfo.version))
                 }
             }
 
@@ -496,7 +568,7 @@ private fun UpdateCard(
                     enabled = !checking,
                     onClick = onCheck,
                 ) {
-                    Text(if (checking) "Controllo…" else "Controlla aggiornamenti")
+                    Text(if (checking) stringResource(R.string.checking) else stringResource(R.string.check_updates))
                 }
             }
         }
@@ -510,7 +582,7 @@ private fun UpdateCard(
         }
 
         Text(
-            text = "Il controllo usa solo l’API pubblica delle release GitHub. Nessun account, analytics o tracking.",
+            text = stringResource(R.string.update_github_note),
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
             style = MaterialTheme.typography.bodySmall,
         )
@@ -542,19 +614,19 @@ private fun SettingsCard(
 
     AppCard {
         Text(
-            text = "Comportamento",
+            text = stringResource(R.string.behavior_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
         )
         Text(
-            text = "Dalla tile puoi lasciare qualche secondo per richiudere la tendina e sistemare il telefono prima che i tocchi vengano bloccati.",
+            text = stringResource(R.string.behavior_intro),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
         )
 
         SettingLabel(
-            title = "Ritardo di attivazione",
-            value = if (delay == 0) "Subito" else "$delay secondi",
+            title = stringResource(R.string.activation_delay),
+            value = if (delay == 0) stringResource(R.string.immediately) else stringResource(R.string.seconds_format, delay),
         )
         Slider(
             value = delay.toFloat(),
@@ -567,19 +639,19 @@ private fun SettingsCard(
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
 
         Text(
-            text = "Sblocco",
+            text = stringResource(R.string.unlock_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
         )
         Text(
-            text = "La pressione deve iniziare al centro e restare quasi ferma. Un secondo dito, uno spostamento eccessivo o il rilascio annullano il conteggio.",
+            text = stringResource(R.string.unlock_desc),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
         )
 
         SettingLabel(
-            title = "Pressione prolungata",
-            value = "$seconds secondi",
+            title = stringResource(R.string.long_press),
+            value = stringResource(R.string.seconds_format, seconds),
         )
         Slider(
             value = seconds.toFloat(),
@@ -592,8 +664,8 @@ private fun SettingsCard(
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
 
         SettingLabel(
-            title = "Oscuramento overlay",
-            value = "${dim.toInt()}%",
+            title = stringResource(R.string.overlay_dimming),
+            value = stringResource(R.string.percent_format, dim.toInt()),
         )
         Slider(
             value = dim,
@@ -602,7 +674,7 @@ private fun SettingsCard(
             valueRange = 0f..35f,
         )
         Text(
-            text = "Con 0–10% la videochiamata resta praticamente invariata.",
+            text = stringResource(R.string.video_call_unchanged),
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
             style = MaterialTheme.typography.bodySmall,
         )
@@ -610,11 +682,11 @@ private fun SettingsCard(
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
 
         SwitchRow(
-            title = "Protezione tendina avanzata",
+            title = stringResource(R.string.shade_protection_title),
             subtitle = if (shadeAccessibilityEnabled) {
-                "Quando Screen Lock è attivo, prova a richiudere subito notifiche e Comandi rapidi usando l’azione di sistema di Accessibilità."
+                stringResource(R.string.shade_protection_enabled_desc)
             } else {
-                "Richiede una configurazione opzionale in Accessibilità. Tocca per vedere cosa attivare e perché serve."
+                stringResource(R.string.shade_protection_disabled_desc)
             },
             checked = shadeProtectionEnabled,
             onCheckedChange = onShadeProtectionChanged,
@@ -629,8 +701,8 @@ private fun SettingsCard(
         }
 
         SwitchRow(
-            title = "Mostra istruzione al centro",
-            subtitle = "Mostra il punto di sblocco all’attivazione; dopo poco diventa quasi invisibile e riappare durante la pressione.",
+            title = stringResource(R.string.show_hint_title),
+            subtitle = stringResource(R.string.show_hint_desc),
             checked = hint,
             onCheckedChange = {
                 hint = it
@@ -638,8 +710,8 @@ private fun SettingsCard(
             },
         )
         SwitchRow(
-            title = "Feedback aptico",
-            subtitle = "Un piccolo feedback quando parte e termina lo sblocco.",
+            title = stringResource(R.string.haptics_title),
+            subtitle = stringResource(R.string.haptics_desc),
             checked = vibration,
             onCheckedChange = {
                 vibration = it
@@ -653,17 +725,17 @@ private fun SettingsCard(
 private fun PrivacyCard() {
     AppCard {
         Text(
-            text = "Privacy by design",
+            text = stringResource(R.string.privacy_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
         )
         Text(
-            text = "Nessun account e nessuna analisi del contenuto dello schermo. Il permesso Internet serve solo per controllare e scaricare le release ufficiali da GitHub. L’overlay locale cattura i tocchi senza leggere ciò che c’è sullo schermo.",
+            text = stringResource(R.string.privacy_body1),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
         )
         Text(
-            text = "Il lock normale resta sotto le finestre critiche di sistema. La Protezione tendina avanzata può chiedere ad Android di richiudere notifiche e Comandi rapidi, ma Power, emergenze e altre UI di sicurezza restano sempre sotto il controllo del sistema.",
+            text = stringResource(R.string.privacy_body2),
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
             style = MaterialTheme.typography.bodySmall,
         )
