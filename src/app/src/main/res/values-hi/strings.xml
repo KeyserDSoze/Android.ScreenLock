@@ -109,4 +109,19 @@
     <string name="overlay_continue_press">दबाए रखें…</string>
     <string name="overlay_hold_to_unlock_format">अनलॉक के लिए %1$dसे दबाएँ</string>
     <string name="download_description">अपडेट डाउनलोड हो रहा है</string>
+    <string name="hero_image_content_description">Screen Lock वीडियो कॉल को आकस्मिक टच से सुरक्षित रखता है</string>
+    <string name="unlock_radius_title">अनलॉक लक्ष्य का रेडियस</string>
+    <string name="dp_format">%1$d dp</string>
+    <string name="unlock_position_title">अनलॉक लक्ष्य की स्थिति</string>
+    <string name="unlock_position_desc">स्क्रीन की 9 मानक स्थितियों में से एक चुनें। लक्ष्य सिस्टम किनारों से सुरक्षित दूरी रखता है।</string>
+    <string name="unlock_position_selected_format">चुना गया: %1$s</string>
+    <string name="unlock_position_top_left">ऊपर बायाँ</string>
+    <string name="unlock_position_top_center">ऊपर बीच</string>
+    <string name="unlock_position_top_right">ऊपर दायाँ</string>
+    <string name="unlock_position_center_left">बीच बायाँ</string>
+    <string name="unlock_position_center">बीच</string>
+    <string name="unlock_position_center_right">बीच दायाँ</string>
+    <string name="unlock_position_bottom_left">नीचे बायाँ</string>
+    <string name="unlock_position_bottom_center">नीचे बीच</string>
+    <string name="unlock_position_bottom_right">नीचे दायाँ</string>
 </resources>
