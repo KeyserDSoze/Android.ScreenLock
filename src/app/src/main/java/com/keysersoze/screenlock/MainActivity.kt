@@ -4,6 +4,7 @@ import android.app.StatusBarManager
 import android.content.ComponentName
 import android.content.Intent
 import android.graphics.drawable.Icon
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -18,42 +19,42 @@ import com.keysersoze.screenlock.ui.theme.ScreenLockTheme
 
 class MainActivity : ComponentActivity() {
 
-    private var accessibilityEnabled by mutableStateOf(false)
-    private var showAccessibilityHelp by mutableStateOf(false)
+    private var overlayEnabled by mutableStateOf(false)
+    private var showOverlayHelp by mutableStateOf(false)
     private var tileMessage by mutableStateOf<String?>(null)
     private var pendingTilePrompt = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        accessibilityEnabled = LockPreferences.isAccessibilityEnabled(this)
+        overlayEnabled = LockPreferences.canDrawOverlays(this)
 
         setContent {
             ScreenLockTheme {
                 ScreenLockApp(
-                    accessibilityEnabled = accessibilityEnabled,
-                    showAccessibilityHelp = showAccessibilityHelp,
+                    overlayEnabled = overlayEnabled,
+                    showOverlayHelp = showOverlayHelp,
                     activationDelaySeconds = LockPreferences.activationDelaySeconds(this),
                     unlockSeconds = LockPreferences.unlockSeconds(this),
                     dimPercent = LockPreferences.dimPercent(this),
                     showHint = LockPreferences.showHint(this),
                     haptics = LockPreferences.haptics(this),
                     tileMessage = tileMessage,
-                    onEnableAccessibility = {
-                        showAccessibilityHelp = true
+                    onEnableOverlay = {
+                        showOverlayHelp = true
                     },
-                    onDismissAccessibilityHelp = {
-                        showAccessibilityHelp = false
+                    onDismissOverlayHelp = {
+                        showOverlayHelp = false
                     },
-                    onOpenAccessibilitySettings = {
-                        showAccessibilityHelp = false
-                        openAccessibilitySettings()
+                    onOpenOverlaySettings = {
+                        showOverlayHelp = false
+                        openOverlaySettings()
                     },
                     onAddQuickTile = ::requestQuickTile,
                     onTestLock = {
-                        ScreenLockAccessibilityService.sendCommand(
+                        ScreenLockOverlayService.start(
                             this,
-                            ScreenLockAccessibilityService.ACTION_LOCK,
+                            ScreenLockOverlayService.ACTION_LOCK,
                         )
                     },
                     onActivationDelayChanged = {
@@ -70,12 +71,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        val wasEnabled = accessibilityEnabled
-        val enabledNow = LockPreferences.isAccessibilityEnabled(this)
-        accessibilityEnabled = enabledNow
+        val wasEnabled = overlayEnabled
+        val enabledNow = LockPreferences.canDrawOverlays(this)
+        overlayEnabled = enabledNow
 
         if (!wasEnabled && enabledNow) {
-            tileMessage = "Perfetto: Screen Lock è abilitato. Ora aggiungiamo il pulsante alla tendina."
+            tileMessage =
+                "Perfetto: il permesso è attivo. Ora aggiungiamo Screen Lock alla tendina."
             pendingTilePrompt = true
         }
     }
@@ -88,12 +90,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun openAccessibilitySettings() {
-        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-        runCatching { startActivity(intent) }
+    private fun openOverlaySettings() {
+        val appSpecific = Intent(
+            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            Uri.parse("package:$packageName"),
+        )
+        val fallback = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+
+        runCatching { startActivity(appSpecific) }
+            .recoverCatching { startActivity(fallback) }
             .onFailure {
                 tileMessage =
-                    "Non riesco ad aprire automaticamente Accessibilità. Apri Impostazioni → Accessibilità e scegli Screen Lock."
+                    "Apri Impostazioni e cerca “Mostra sopra altre app”, poi abilita Screen Lock."
             }
     }
 
