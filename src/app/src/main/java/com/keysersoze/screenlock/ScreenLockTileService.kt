@@ -2,6 +2,7 @@ package com.keysersoze.screenlock
 
 import android.app.PendingIntent
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.service.quicksettings.Tile
@@ -17,8 +18,12 @@ class ScreenLockTileService : TileService() {
     override fun onClick() {
         super.onClick()
 
-        if (!LockPreferences.isAccessibilityEnabled(this)) {
-            launchAndCollapse(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        if (!LockPreferences.canDrawOverlays(this)) {
+            val settingsIntent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName"),
+            )
+            launchAndCollapse(settingsIntent)
             return
         }
 
@@ -27,21 +32,21 @@ class ScreenLockTileService : TileService() {
 
     private fun updateTileState() {
         val tile = qsTile ?: return
-        val enabled = LockPreferences.isAccessibilityEnabled(this)
-        val state = ScreenLockAccessibilityService.runtimeState()
+        val enabled = LockPreferences.canDrawOverlays(this)
+        val state = ScreenLockOverlayService.runtimeState()
 
         tile.state = when {
             !enabled -> Tile.STATE_UNAVAILABLE
-            state == ScreenLockAccessibilityService.LockState.LOCKED -> Tile.STATE_ACTIVE
-            state == ScreenLockAccessibilityService.LockState.ARMING -> Tile.STATE_ACTIVE
+            state == ScreenLockOverlayService.LockState.LOCKED -> Tile.STATE_ACTIVE
+            state == ScreenLockOverlayService.LockState.ARMING -> Tile.STATE_ACTIVE
             else -> Tile.STATE_INACTIVE
         }
         tile.label = getString(R.string.quick_tile_label)
         tile.contentDescription = when {
             !enabled -> getString(R.string.quick_tile_unavailable)
-            state == ScreenLockAccessibilityService.LockState.ARMING ->
+            state == ScreenLockOverlayService.LockState.ARMING ->
                 "Screen Lock in attivazione"
-            state == ScreenLockAccessibilityService.LockState.LOCKED ->
+            state == ScreenLockOverlayService.LockState.LOCKED ->
                 "Screen Lock attivo"
             else ->
                 "Screen Lock pronto"
@@ -49,8 +54,8 @@ class ScreenLockTileService : TileService() {
         if (Build.VERSION.SDK_INT >= 29) {
             tile.subtitle = when {
                 !enabled -> "Configura"
-                state == ScreenLockAccessibilityService.LockState.ARMING -> "Attivazione…"
-                state == ScreenLockAccessibilityService.LockState.LOCKED -> "Bloccato"
+                state == ScreenLockOverlayService.LockState.ARMING -> "Attivazione…"
+                state == ScreenLockOverlayService.LockState.LOCKED -> "Bloccato"
                 else -> "Pronto"
             }
         }
