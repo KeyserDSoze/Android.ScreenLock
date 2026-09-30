@@ -1,5 +1,6 @@
 package com.keysersoze.screenlock
 
+import android.content.ComponentName
 import android.content.Context
 import android.provider.Settings
 
@@ -10,7 +11,7 @@ object LockPreferences {
     private const val KEY_DIM_PERCENT = "dim_percent"
     private const val KEY_SHOW_HINT = "show_hint"
     private const val KEY_HAPTICS = "haptics"
-    private const val KEY_IMMERSIVE_SHIELD = "immersive_shield"
+    private const val KEY_SHADE_PROTECTION = "shade_protection"
     private const val KEY_AUTO_UPDATES = "auto_updates"
 
     private fun prefs(context: Context) =
@@ -47,11 +48,11 @@ object LockPreferences {
         prefs(context).edit().putBoolean(KEY_HAPTICS, value).apply()
     }
 
-    fun immersiveShield(context: Context): Boolean =
-        prefs(context).getBoolean(KEY_IMMERSIVE_SHIELD, false)
+    fun shadeProtection(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_SHADE_PROTECTION, false)
 
-    fun setImmersiveShield(context: Context, value: Boolean) {
-        prefs(context).edit().putBoolean(KEY_IMMERSIVE_SHIELD, value).apply()
+    fun setShadeProtection(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_SHADE_PROTECTION, value).apply()
     }
 
     fun autoUpdates(context: Context): Boolean =
@@ -62,4 +63,20 @@ object LockPreferences {
     }
 
     fun canDrawOverlays(context: Context): Boolean = Settings.canDrawOverlays(context)
+
+    fun isShadeProtectionAccessibilityEnabled(context: Context): Boolean {
+        val expected = ComponentName(
+            context,
+            ShadeProtectionAccessibilityService::class.java,
+        )
+        val enabled = Settings.Secure.getString(
+            context.contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+        ).orEmpty()
+
+        return enabled
+            .split(':')
+            .mapNotNull(ComponentName::unflattenFromString)
+            .any { it == expected }
+    }
 }
