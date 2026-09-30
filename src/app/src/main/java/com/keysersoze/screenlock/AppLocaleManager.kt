@@ -33,11 +33,24 @@ object AppLocaleManager {
 
     private val supportedCodes = supportedLanguages.map { it.code }.toSet()
 
-    fun selectedLanguage(context: Context): String =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    fun selectedLanguage(context: Context): String {
+        val stored = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getString(KEY_LANGUAGE, SYSTEM)
             ?.takeIf { it == SYSTEM || it in supportedCodes }
             ?: SYSTEM
+
+        if (stored != SYSTEM || Build.VERSION.SDK_INT < 33) return stored
+
+        val frameworkTag = context.getSystemService(LocaleManager::class.java)
+            .applicationLocales
+            .toLanguageTags()
+            .substringBefore(',')
+            .takeIf { it.isNotBlank() }
+
+        return frameworkTag
+            ?.let(::normalizeSupportedTag)
+            ?: SYSTEM
+    }
 
     fun setLanguage(context: Context, code: String) {
         val normalized = if (code == SYSTEM || code in supportedCodes) code else SYSTEM
@@ -80,6 +93,24 @@ object AppLocaleManager {
             setLayoutDirection(locale)
         }
         return base.createConfigurationContext(configuration)
+    }
+
+    private fun normalizeSupportedTag(tag: String): String? {
+        if (tag in supportedCodes) return tag
+        val locale = Locale.forLanguageTag(tag)
+        return when (locale.language.lowercase(Locale.ROOT)) {
+            "it" -> "it"
+            "es" -> "es"
+            "fr" -> "fr"
+            "de" -> "de"
+            "pt" -> "pt"
+            "ru" -> "ru"
+            "ar" -> "ar"
+            "hi" -> "hi"
+            "zh" -> "zh-CN"
+            "en" -> "en"
+            else -> null
+        }
     }
 
     fun effectiveLanguage(context: Context): String {
