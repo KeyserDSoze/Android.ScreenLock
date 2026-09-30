@@ -1,3 +1,4 @@
+# A workflow-only fix may retry the current VERSION until its tag exists.
 name: Release APK
 
 on:
