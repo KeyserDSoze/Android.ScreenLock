@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun ScreenLockApp(
     accessibilityEnabled: Boolean,
+    activationDelaySeconds: Int,
     unlockSeconds: Int,
     dimPercent: Int,
     showHint: Boolean,
@@ -61,6 +62,7 @@ fun ScreenLockApp(
     onEnableAccessibility: () -> Unit,
     onAddQuickTile: () -> Unit,
     onTestLock: () -> Unit,
+    onActivationDelayChanged: (Int) -> Unit,
     onUnlockSecondsChanged: (Int) -> Unit,
     onDimPercentChanged: (Int) -> Unit,
     onShowHintChanged: (Boolean) -> Unit,
@@ -103,10 +105,12 @@ fun ScreenLockApp(
                 }
                 item {
                     SettingsCard(
+                        activationDelaySeconds = activationDelaySeconds,
                         unlockSeconds = unlockSeconds,
                         dimPercent = dimPercent,
                         showHint = showHint,
                         haptics = haptics,
+                        onActivationDelayChanged = onActivationDelayChanged,
                         onUnlockSecondsChanged = onUnlockSecondsChanged,
                         onDimPercentChanged = onDimPercentChanged,
                         onShowHintChanged = onShowHintChanged,
@@ -211,7 +215,7 @@ private fun SetupCard(
         )
         Text(
             text = if (enabled) {
-                "Ora aggiungi Screen Lock ai Comandi rapidi. Durante una chiamata, abbassa il pannello, tocca la tile e Android lo richiuderà mentre il blocco entra in funzione."
+                "Ora aggiungi Screen Lock ai Comandi rapidi. Durante una chiamata, tocca la tile: Android richiude il pannello e, dopo il ritardo scelto, il blocco entra in funzione."
             } else {
                 "Android richiede di abilitare il servizio di accessibilità una sola volta. Screen Lock usa quel permesso solo per posizionare l’overlay che intercetta i tocchi."
             },
@@ -255,15 +259,18 @@ private fun SetupCard(
 
 @Composable
 private fun SettingsCard(
+    activationDelaySeconds: Int,
     unlockSeconds: Int,
     dimPercent: Int,
     showHint: Boolean,
     haptics: Boolean,
+    onActivationDelayChanged: (Int) -> Unit,
     onUnlockSecondsChanged: (Int) -> Unit,
     onDimPercentChanged: (Int) -> Unit,
     onShowHintChanged: (Boolean) -> Unit,
     onHapticsChanged: (Boolean) -> Unit,
 ) {
+    var delay by remember(activationDelaySeconds) { mutableIntStateOf(activationDelaySeconds) }
     var seconds by remember(unlockSeconds) { mutableIntStateOf(unlockSeconds) }
     var dim by remember(dimPercent) { mutableFloatStateOf(dimPercent.toFloat()) }
     var hint by remember(showHint) { mutableStateOf(showHint) }
@@ -271,12 +278,37 @@ private fun SettingsCard(
 
     AppCard {
         Text(
-            text = "Sblocco",
+            text = "Comportamento",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
         )
         Text(
-            text = "La pressione deve iniziare al centro dello schermo e restare lì. Muoversi troppo o sollevare il dito annulla tutto.",
+            text = "Dalla tile puoi lasciare qualche secondo per richiudere la tendina e sistemare il telefono prima che i tocchi vengano bloccati.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+
+        SettingLabel(
+            title = "Ritardo di attivazione",
+            value = if (delay == 0) "Subito" else "$delay secondi",
+        )
+        Slider(
+            value = delay.toFloat(),
+            onValueChange = { delay = it.toInt().coerceIn(0, 5) },
+            onValueChangeFinished = { onActivationDelayChanged(delay) },
+            valueRange = 0f..5f,
+            steps = 4,
+        )
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
+
+        Text(
+            text = "Sblocco",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            text = "La pressione deve iniziare al centro e restare quasi ferma. Un secondo dito, uno spostamento eccessivo o il rilascio annullano il conteggio.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
         )
@@ -315,7 +347,7 @@ private fun SettingsCard(
 
         SwitchRow(
             title = "Mostra istruzione al centro",
-            subtitle = "Visualizza il punto di sblocco e il testo della pressione prolungata.",
+            subtitle = "Mostra il punto di sblocco all’attivazione; dopo poco diventa quasi invisibile e riappare durante la pressione.",
             checked = hint,
             onCheckedChange = {
                 hint = it
@@ -348,7 +380,7 @@ private fun PrivacyCard() {
             style = MaterialTheme.typography.bodyMedium,
         )
         Text(
-            text = "Nota: Android mantiene sempre alcune vie di sicurezza di sistema. Tasto di accensione, emergenze e alcune UI di sistema non possono essere neutralizzati completamente da una normale app.",
+            text = "Quando Android lo consente, Screen Lock richiude anche la tendina notifiche se viene aperta durante il blocco. Power, emergenze e alcune UI di sistema restano comunque sotto il controllo di Android.",
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
             style = MaterialTheme.typography.bodySmall,
         )
