@@ -10,17 +10,18 @@
 4. Avvia la chiamata in Telegram (o qualunque altra app), abbassa i Comandi rapidi e tocca **Screen Lock**.
 5. Il pannello viene richiuso; dopo il ritardo configurato (2 secondi di default) parte un foreground service e compare un `TYPE_APPLICATION_OVERLAY` quasi trasparente che assorbe i tocchi e mantiene lo schermo acceso.
 6. Il bersaglio di sblocco è visibile per un istante e poi diventa molto discreto. Per sbloccare, tieni premuto **al centro dello schermo** per il tempo configurato (6 secondi di default). Movimento eccessivo, rilascio o multitouch annullano il conteggio.
-7. In impostazioni puoi attivare **Protezione tendina (sperimentale)**: usa una Activity trasparente in modalità immersiva per nascondere le barre di sistema e ridurre gli swipe accidentali. Android può comunque rivelare barre transitorie con un gesto dal bordo; un blocco assoluto della System UI richiede modalità device-owner/kiosk.
+7. In impostazioni puoi attivare **Protezione tendina avanzata**. È opzionale e richiede un servizio di Accessibilità separato, limitato agli eventi di `com.android.systemui`: mentre Screen Lock è attivo usa `GLOBAL_ACTION_DISMISS_NOTIFICATION_SHADE` per chiedere ad Android di richiudere notifiche e Comandi rapidi appena si aprono.
 
 ## Limiti Android
 
-Screen Lock blocca i normali tocchi consegnati alle app sotto l'overlay. Non usa più un Accessibility Service: questo evita le restrizioni aggiuntive applicate da alcune versioni/ROM Android agli APK installati da browser. Un `TYPE_APPLICATION_OVERLAY` resta però sotto le finestre critiche di sistema, quindi tendina notifiche, tasto di accensione, emergenze e alcune UI di sistema rimangono disponibili. Non è una modalità kiosk né modifica Telegram.
+Screen Lock blocca i normali tocchi consegnati alle app sotto l'overlay. Il lock di base non richiede Accessibilità. La Protezione tendina avanzata usa invece un Accessibility Service opzionale che non recupera il contenuto delle finestre (`canRetrieveWindowContent=false`) ed è filtrato su `com.android.systemui`. Su Android 13+ un APK installato fuori dallo store può essere soggetto a “Restricted Settings”; in quel caso Android richiede un consenso aggiuntivo e alcune ROM possono non renderlo disponibile. Power, emergenze e altre UI critiche restano comunque sotto il controllo del sistema.
 
 ## Privacy
 
 - Nessun account, analytics o tracking.
 - Internet viene usato solo dall'updater per leggere la release più recente dal repository GitHub e scaricare l'APK ufficiale.
-- Nessun servizio di Accessibilità.
+- Il lock di base non usa Accessibilità.
+- La Protezione tendina avanzata usa un servizio opzionale, limitato a System UI e con lettura del contenuto disattivata.
 - Nessuna lettura del contenuto delle finestre.
 - Il foreground service esiste solo mentre il blocco overlay è in attivazione o attivo.
 - Preferenze solo locali sul dispositivo.
@@ -64,7 +65,7 @@ Quando un nuovo `VERSION` arriva su `main`, la GitHub Action:
 - calcola SHA-256;
 - crea automaticamente la GitHub Release e allega APK + checksum.
 
-La pipeline conserva la debug keystore nella cache GitHub per rendere normalmente aggiornabili le build successive. Essendo una cache e non una chiave release permanente, se GitHub la elimina potrebbe essere necessario disinstallare una build vecchia prima di installarne una nuova. Per una distribuzione pubblica/Play Store va configurata una vera release keystore tramite GitHub Secrets.
+La pipeline richiede una keystore stabile tramite i GitHub Secrets `SCREENLOCK_KEYSTORE_B64` e `SCREENLOCK_KEYSTORE_PASSWORD`, verifica il certificato con `apksigner` e rifiuta di pubblicare se la firma non è disponibile. Questo rende aggiornabili tra loro le release dalla v0.0.5 in avanti.
 
 ## Struttura
 
@@ -88,9 +89,11 @@ La pipeline conserva la debug keystore nella cache GitHub per rendere normalment
 MIT.
 
 
-## Migrazione dalla 0.0.3
+## Protezione tendina avanzata
 
-Dalla versione 0.0.4 Screen Lock non usa più Accessibilità. Dopo l'aggiornamento apri l'app e concedi **Mostra sopra altre app**; poi usa o aggiungi la tile dei Comandi rapidi. L'eventuale vecchia autorizzazione di Accessibilità non è più necessaria per Screen Lock.
+Il blocco touch continua a funzionare con il solo permesso **Mostra sopra altre app**. Se vuoi anche contrastare gli swipe sulla tendina, abilita **Protezione tendina avanzata**: l'app spiega prima cosa viene attivato e poi apre Accessibilità. La voce da cercare è **Screen Lock · Protezione tendina**.
+
+Se Android mostra “Controlled by Restricted Setting”, apri **Info app** e cerca **Consenti impostazioni con limitazioni**. Questa autorizzazione è gestita da Android e può variare in base alla ROM; l'app non può aggirarla automaticamente.
 
 
 ## Aggiornamenti interni
