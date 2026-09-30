@@ -1,6 +1,5 @@
 package com.keysersoze.screenlock
 
-import android.content.ComponentName
 import android.content.Context
 import android.provider.Settings
 
@@ -46,16 +45,5 @@ object LockPreferences {
         prefs(context).edit().putBoolean(KEY_HAPTICS, value).apply()
     }
 
-    fun isAccessibilityEnabled(context: Context): Boolean {
-        val expected = ComponentName(context, ScreenLockAccessibilityService::class.java)
-        val enabled = Settings.Secure.getString(
-            context.contentResolver,
-            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-        ).orEmpty()
-
-        return enabled
-            .split(':')
-            .mapNotNull(ComponentName::unflattenFromString)
-            .any { it == expected }
-    }
+    fun canDrawOverlays(context: Context): Boolean = Settings.canDrawOverlays(context)
 }
