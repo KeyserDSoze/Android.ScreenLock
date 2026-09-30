@@ -64,7 +64,7 @@ object UpdateManager {
         val manager = context.getSystemService(DownloadManager::class.java)
         val request = DownloadManager.Request(Uri.parse(info.apkUrl))
             .setTitle("Screen Lock ${info.version}")
-            .setDescription("Scaricamento aggiornamento")
+            .setDescription(AppLocaleManager.wrap(context).getString(R.string.download_description))
             .setMimeType("application/vnd.android.package-archive")
             .setAllowedOverMetered(true)
             .setAllowedOverRoaming(false)
