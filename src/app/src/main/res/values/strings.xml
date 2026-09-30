@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Screen Lock</string>
-    <string name="accessibility_service_name">Screen Lock</string>
-    <string name="accessibility_service_description">Blocca i tocchi accidentali sopra le altre app senza leggere il contenuto dello schermo.</string>
     <string name="quick_tile_label">Screen Lock</string>
-    <string name="quick_tile_unavailable">Abilita prima Screen Lock in Accessibilità</string>
+    <string name="quick_tile_unavailable">Consenti a Screen Lock di mostrarsi sopra le altre app</string>
+    <string name="notification_channel_name">Blocco schermo attivo</string>
+    <string name="notification_channel_description">Mantiene attivo il blocco dei tocchi finché non lo sblocchi.</string>
 </resources>
