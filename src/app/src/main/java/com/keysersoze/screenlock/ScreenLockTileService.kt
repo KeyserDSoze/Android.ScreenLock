@@ -22,28 +22,35 @@ class ScreenLockTileService : TileService() {
             return
         }
 
-        // Launching the tiny no-display activity makes Android collapse Quick
-        // Settings first, then the service places the touch-blocking overlay on
-        // top of the app the user was already using (e.g. Telegram).
         launchAndCollapse(Intent(this, ToggleLockActivity::class.java))
     }
 
     private fun updateTileState() {
         val tile = qsTile ?: return
         val enabled = LockPreferences.isAccessibilityEnabled(this)
-        val locked = LockPreferences.isLocked(this)
+        val state = ScreenLockAccessibilityService.runtimeState()
 
-        tile.state = if (locked) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+        tile.state = when {
+            !enabled -> Tile.STATE_UNAVAILABLE
+            state == ScreenLockAccessibilityService.LockState.LOCKED -> Tile.STATE_ACTIVE
+            state == ScreenLockAccessibilityService.LockState.ARMING -> Tile.STATE_ACTIVE
+            else -> Tile.STATE_INACTIVE
+        }
         tile.label = getString(R.string.quick_tile_label)
         tile.contentDescription = when {
             !enabled -> getString(R.string.quick_tile_unavailable)
-            locked -> "Screen Lock attivo"
-            else -> "Screen Lock disattivo"
+            state == ScreenLockAccessibilityService.LockState.ARMING ->
+                "Screen Lock in attivazione"
+            state == ScreenLockAccessibilityService.LockState.LOCKED ->
+                "Screen Lock attivo"
+            else ->
+                "Screen Lock pronto"
         }
         if (Build.VERSION.SDK_INT >= 29) {
             tile.subtitle = when {
                 !enabled -> "Configura"
-                locked -> "Bloccato"
+                state == ScreenLockAccessibilityService.LockState.ARMING -> "Attivazione…"
+                state == ScreenLockAccessibilityService.LockState.LOCKED -> "Bloccato"
                 else -> "Pronto"
             }
         }
