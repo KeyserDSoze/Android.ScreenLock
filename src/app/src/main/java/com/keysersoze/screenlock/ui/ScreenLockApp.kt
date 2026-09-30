@@ -2,10 +2,8 @@ package com.keysersoze.screenlock.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -51,9 +49,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -224,11 +219,17 @@ fun ScreenLockApp(
 @Composable
 private fun Hero(enabled: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-        Image(
-            painter = painterResource(R.drawable.screen_lock_brand_icon),
-            contentDescription = null,
-            modifier = Modifier.size(82.dp),
-        )
+        Box(
+            modifier = Modifier
+                .size(74.dp)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            LockGlyph(
+                modifier = Modifier.size(40.dp),
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
@@ -248,16 +249,6 @@ private fun Hero(enabled: Boolean) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.86f),
             )
         }
-
-        Image(
-            painter = painterResource(R.drawable.screen_lock_home_hero),
-            contentDescription = stringResource(R.string.hero_image_content_description),
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(4f / 3f)
-                .clip(RoundedCornerShape(24.dp)),
-            contentScale = ContentScale.Crop,
-        )
 
         StatusPill(enabled)
     }
