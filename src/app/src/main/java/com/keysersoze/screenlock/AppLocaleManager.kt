@@ -1,0 +1,109 @@
+package com.keysersoze.screenlock
+
+import android.app.LocaleManager
+import android.content.Context
+import android.content.res.Configuration
+import android.os.Build
+import android.os.LocaleList
+import java.util.Locale
+
+data class AppLanguageOption(
+    val code: String,
+    val nativeName: String,
+)
+
+object AppLocaleManager {
+    const val SYSTEM = "system"
+
+    private const val PREFS = "screen_lock_locale"
+    private const val KEY_LANGUAGE = "language"
+
+    val supportedLanguages = listOf(
+        AppLanguageOption("en", "English"),
+        AppLanguageOption("it", "Italiano"),
+        AppLanguageOption("es", "Español"),
+        AppLanguageOption("fr", "Français"),
+        AppLanguageOption("de", "Deutsch"),
+        AppLanguageOption("pt", "Português"),
+        AppLanguageOption("ru", "Русский"),
+        AppLanguageOption("ar", "العربية"),
+        AppLanguageOption("hi", "हिन्दी"),
+        AppLanguageOption("zh-CN", "简体中文"),
+    )
+
+    private val supportedCodes = supportedLanguages.map { it.code }.toSet()
+
+    fun selectedLanguage(context: Context): String =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(KEY_LANGUAGE, SYSTEM)
+            ?.takeIf { it == SYSTEM || it in supportedCodes }
+            ?: SYSTEM
+
+    fun setLanguage(context: Context, code: String) {
+        val normalized = if (code == SYSTEM || code in supportedCodes) code else SYSTEM
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_LANGUAGE, normalized)
+            .apply()
+
+        if (Build.VERSION.SDK_INT >= 33) {
+            val manager = context.getSystemService(LocaleManager::class.java)
+            manager.applicationLocales = if (normalized == SYSTEM) {
+                LocaleList.getEmptyLocaleList()
+            } else {
+                LocaleList.forLanguageTags(normalized)
+            }
+        }
+    }
+
+    fun syncFrameworkLocale(context: Context) {
+        if (Build.VERSION.SDK_INT < 33) return
+        val selected = selectedLanguage(context)
+        val desired = if (selected == SYSTEM) {
+            LocaleList.getEmptyLocaleList()
+        } else {
+            LocaleList.forLanguageTags(selected)
+        }
+        val manager = context.getSystemService(LocaleManager::class.java)
+        if (manager.applicationLocales.toLanguageTags() != desired.toLanguageTags()) {
+            manager.applicationLocales = desired
+        }
+    }
+
+    fun wrap(base: Context): Context {
+        val selected = selectedLanguage(base)
+        if (selected == SYSTEM) return base
+
+        val locale = Locale.forLanguageTag(selected)
+        val configuration = Configuration(base.resources.configuration).apply {
+            setLocale(locale)
+            setLayoutDirection(locale)
+        }
+        return base.createConfigurationContext(configuration)
+    }
+
+    fun effectiveLanguage(context: Context): String {
+        val selected = selectedLanguage(context)
+        if (selected != SYSTEM) return selected
+
+        val locale = if (Build.VERSION.SDK_INT >= 24) {
+            context.resources.configuration.locales[0]
+        } else {
+            @Suppress("DEPRECATION")
+            context.resources.configuration.locale
+        }
+
+        return when (locale.language.lowercase(Locale.ROOT)) {
+            "it" -> "it"
+            "es" -> "es"
+            "fr" -> "fr"
+            "de" -> "de"
+            "pt" -> "pt"
+            "ru" -> "ru"
+            "ar" -> "ar"
+            "hi" -> "hi"
+            "zh" -> "zh-CN"
+            else -> "en"
+        }
+    }
+}
