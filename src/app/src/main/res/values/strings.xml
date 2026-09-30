@@ -4,4 +4,6 @@
     <string name="quick_tile_unavailable">Consenti a Screen Lock di mostrarsi sopra le altre app</string>
     <string name="notification_channel_name">Blocco schermo attivo</string>
     <string name="notification_channel_description">Mantiene attivo il blocco dei tocchi finché non lo sblocchi.</string>
+    <string name="shade_protection_accessibility_name">Screen Lock · Protezione tendina</string>
+    <string name="shade_protection_accessibility_description">Protezione opzionale che richiude la tendina notifiche mentre Screen Lock è attivo. Non legge il contenuto dello schermo.</string>
 </resources>
