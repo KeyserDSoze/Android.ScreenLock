@@ -109,4 +109,19 @@
     <string name="overlay_continue_press">Continua a premere…</string>
     <string name="overlay_hold_to_unlock_format">Tieni premuto %1$ds per sbloccare</string>
     <string name="download_description">Scaricamento aggiornamento</string>
+    <string name="hero_image_content_description">Screen Lock protegge una videochiamata dai tocchi accidentali</string>
+    <string name="unlock_radius_title">Raggio del punto di sblocco</string>
+    <string name="dp_format">%1$d dp</string>
+    <string name="unlock_position_title">Posizione del punto di sblocco</string>
+    <string name="unlock_position_desc">Scegli una delle 9 posizioni standard dello schermo. Il punto mantiene un margine sicuro dai bordi di sistema.</string>
+    <string name="unlock_position_selected_format">Selezionata: %1$s</string>
+    <string name="unlock_position_top_left">In alto a sinistra</string>
+    <string name="unlock_position_top_center">In alto al centro</string>
+    <string name="unlock_position_top_right">In alto a destra</string>
+    <string name="unlock_position_center_left">Al centro a sinistra</string>
+    <string name="unlock_position_center">Al centro</string>
+    <string name="unlock_position_center_right">Al centro a destra</string>
+    <string name="unlock_position_bottom_left">In basso a sinistra</string>
+    <string name="unlock_position_bottom_center">In basso al centro</string>
+    <string name="unlock_position_bottom_right">In basso a destra</string>
 </resources>
