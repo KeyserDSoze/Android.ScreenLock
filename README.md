@@ -32,6 +32,12 @@ Le risorse visuali generate per Screen Lock sono conservate nel repository. Gli 
 
 Gli asset Android ottimizzati si trovano in `src/app/src/main/res/drawable-nodpi/`; un concept alternativo è conservato in `assets/branding/`.
 
+## Punto di sblocco personalizzabile
+
+Il punto di sblocco può essere configurato con un raggio da 40 a 120 dp e posizionato in una griglia 3×3: alto sinistra, alto centro, alto destra, centro sinistra, centro, centro destra, basso sinistra, basso centro e basso destra. L'overlay mantiene automaticamente un margine di sicurezza dai bordi di sistema.
+
+Le immagini generate vengono usate solo all'interno della home dell'app; il launcher resta sulla variante vettoriale stabile per evitare la regressione riscontrata nella v0.0.7.
+
 ## Lingue
 
 Screen Lock segue per impostazione predefinita la lingua del sistema. Dalla schermata principale è possibile scegliere manualmente una lingua diversa; la preferenza resta salvata e, su Android 13+, viene sincronizzata anche con le lingue per-app del sistema.
