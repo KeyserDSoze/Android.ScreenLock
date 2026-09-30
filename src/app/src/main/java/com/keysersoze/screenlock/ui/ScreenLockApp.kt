@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -30,6 +31,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -53,6 +55,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun ScreenLockApp(
     accessibilityEnabled: Boolean,
+    showAccessibilityHelp: Boolean,
     activationDelaySeconds: Int,
     unlockSeconds: Int,
     dimPercent: Int,
@@ -60,6 +63,8 @@ fun ScreenLockApp(
     haptics: Boolean,
     tileMessage: String?,
     onEnableAccessibility: () -> Unit,
+    onDismissAccessibilityHelp: () -> Unit,
+    onOpenAccessibilitySettings: () -> Unit,
     onAddQuickTile: () -> Unit,
     onTestLock: () -> Unit,
     onActivationDelayChanged: (Int) -> Unit,
@@ -68,6 +73,13 @@ fun ScreenLockApp(
     onShowHintChanged: (Boolean) -> Unit,
     onHapticsChanged: (Boolean) -> Unit,
 ) {
+    if (showAccessibilityHelp) {
+        AccessibilityHelpDialog(
+            onDismiss = onDismissAccessibilityHelp,
+            onContinue = onOpenAccessibilitySettings,
+        )
+    }
+
     val background = Brush.verticalGradient(
         0f to Color(0xFF111C18),
         0.34f to Color(0xFF0B1114),
@@ -192,7 +204,7 @@ private fun StatusPill(enabled: Boolean) {
                 ),
         )
         Text(
-            text = if (enabled) "Servizio pronto" else "Configurazione richiesta",
+            text = if (enabled) "Screen Lock abilitato" else "Passaggio 1 da completare",
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
         )
@@ -209,15 +221,15 @@ private fun SetupCard(
 ) {
     AppCard {
         Text(
-            text = "Avvio rapido",
+            text = "Configurazione guidata",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
         )
         Text(
             text = if (enabled) {
-                "Ora aggiungi Screen Lock ai Comandi rapidi. Durante una chiamata, tocca la tile: Android richiude il pannello e, dopo il ritardo scelto, il blocco entra in funzione."
+                "Passaggio 2 di 2 · Aggiungi il pulsante Screen Lock alla tendina dei Comandi rapidi. Su Android 13 o successivi comparirà direttamente la richiesta di sistema."
             } else {
-                "Android richiede di abilitare il servizio di accessibilità una sola volta. Screen Lock usa quel permesso solo per posizionare l’overlay che intercetta i tocchi."
+                "Passaggio 1 di 2 · Android deve autorizzare Screen Lock a mostrare il blocco sopra le altre app. Ti indichiamo esattamente cosa toccare prima di aprire le Impostazioni."
             },
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
@@ -230,15 +242,25 @@ private fun SetupCard(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onEnableAccessibility,
             ) {
-                Text("Abilita Screen Lock")
+                Text("1 · Abilita Screen Lock")
             }
+            Text(
+                text = "Non devi concedere accesso ai contenuti dello schermo: Screen Lock è configurato per non leggerli.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+                style = MaterialTheme.typography.bodySmall,
+            )
         } else {
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onAddQuickTile,
             ) {
-                Text("Aggiungi ai Comandi rapidi")
+                Text("2 · Aggiungi pulsante alla tendina")
             }
+            Text(
+                text = "Poi, durante una chiamata, abbassa la tendina e tocca Screen Lock per bloccare i tocchi.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+                style = MaterialTheme.typography.bodySmall,
+            )
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onTestLock,
@@ -255,6 +277,50 @@ private fun SetupCard(
             )
         }
     }
+}
+
+@Composable
+private fun AccessibilityHelpDialog(
+    onDismiss: () -> Unit,
+    onContinue: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Attiva Screen Lock in Android",
+                fontWeight = FontWeight.Bold,
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Si aprirà la schermata Accessibilità di Android. I nomi possono cambiare leggermente in base al telefono.",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    text = "1. Cerca “Screen Lock” (a volte è dentro “App scaricate” o “Servizi installati”).\n\n2. Tocca Screen Lock.\n\n3. Attiva “Usa Screen Lock” o l’interruttore equivalente.\n\n4. Conferma la richiesta di Android e torna qui.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                )
+                Text(
+                    text = "Per sicurezza Android non consente all’app di attivare questo permesso da sola. Screen Lock non legge il contenuto dello schermo.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = onContinue) {
+                Text("Apri Accessibilità")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Non ora")
+            }
+        },
+    )
 }
 
 @Composable
