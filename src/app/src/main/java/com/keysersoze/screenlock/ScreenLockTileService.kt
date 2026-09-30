@@ -1,6 +1,7 @@
 package com.keysersoze.screenlock
 
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -9,6 +10,10 @@ import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 
 class ScreenLockTileService : TileService() {
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLocaleManager.wrap(newBase))
+    }
 
     override fun onStartListening() {
         super.onStartListening()
@@ -46,20 +51,20 @@ class ScreenLockTileService : TileService() {
         tile.label = getString(R.string.quick_tile_label)
         tile.contentDescription = when {
             !configured -> getString(R.string.quick_tile_unavailable)
-            state == ScreenLockRuntime.LockState.ARMING -> "Screen Lock in attivazione"
+            state == ScreenLockRuntime.LockState.ARMING -> getString(R.string.tile_activating)
             state == ScreenLockRuntime.LockState.LOCKED && shadeProtection ->
-                "Screen Lock attivo con protezione tendina"
-            state == ScreenLockRuntime.LockState.LOCKED -> "Screen Lock attivo"
-            else -> "Screen Lock pronto"
+                getString(R.string.tile_active_shade)
+            state == ScreenLockRuntime.LockState.LOCKED -> getString(R.string.tile_active)
+            else -> getString(R.string.tile_ready)
         }
         if (Build.VERSION.SDK_INT >= 29) {
             tile.subtitle = when {
-                !configured -> "Configura"
-                state == ScreenLockRuntime.LockState.ARMING -> "Attivazione…"
-                state == ScreenLockRuntime.LockState.LOCKED && shadeProtection -> "Bloccato + tendina"
-                state == ScreenLockRuntime.LockState.LOCKED -> "Bloccato"
-                shadeProtection -> "Pronto + tendina"
-                else -> "Pronto"
+                !configured -> getString(R.string.tile_configure)
+                state == ScreenLockRuntime.LockState.ARMING -> getString(R.string.tile_sub_activating)
+                state == ScreenLockRuntime.LockState.LOCKED && shadeProtection -> getString(R.string.tile_sub_locked_shade)
+                state == ScreenLockRuntime.LockState.LOCKED -> getString(R.string.tile_sub_locked)
+                shadeProtection -> getString(R.string.tile_sub_ready_shade)
+                else -> getString(R.string.tile_sub_ready)
             }
         }
         tile.updateTile()
