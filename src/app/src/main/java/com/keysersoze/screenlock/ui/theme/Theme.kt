@@ -1,8 +1,10 @@
 package com.keysersoze.screenlock.ui.theme
 
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 
 private val ScreenLockColors = darkColorScheme(
@@ -18,13 +20,15 @@ private val ScreenLockColors = darkColorScheme(
     onSurface = Color(0xFFF4F7FA),
     surfaceVariant = Color(0xFF1A212B),
     onSurfaceVariant = Color(0xFFBEC7D2),
-    outline = Color(0xFF515C69),
+    outline = Color(0xFF657180),
 )
 
 @Composable
 fun ScreenLockTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = ScreenLockColors,
-        content = content,
-    )
+    MaterialTheme(colorScheme = ScreenLockColors) {
+        CompositionLocalProvider(
+            LocalContentColor provides ScreenLockColors.onBackground,
+            content = content,
+        )
+    }
 }
