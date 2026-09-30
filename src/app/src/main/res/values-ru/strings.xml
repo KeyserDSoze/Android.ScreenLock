@@ -109,4 +109,19 @@
     <string name="overlay_continue_press">Продолжайте удерживать…</string>
     <string name="overlay_hold_to_unlock_format">Удерживайте %1$ds для разблокировки</string>
     <string name="download_description">Загрузка обновления</string>
+    <string name="hero_image_content_description">Screen Lock защищает видеозвонок от случайных касаний</string>
+    <string name="unlock_radius_title">Радиус цели разблокировки</string>
+    <string name="dp_format">%1$d dp</string>
+    <string name="unlock_position_title">Положение цели разблокировки</string>
+    <string name="unlock_position_desc">Выберите одну из 9 стандартных позиций экрана. Цель сохраняет безопасный отступ от системных краёв.</string>
+    <string name="unlock_position_selected_format">Выбрано: %1$s</string>
+    <string name="unlock_position_top_left">Сверху слева</string>
+    <string name="unlock_position_top_center">Сверху по центру</string>
+    <string name="unlock_position_top_right">Сверху справа</string>
+    <string name="unlock_position_center_left">По центру слева</string>
+    <string name="unlock_position_center">По центру</string>
+    <string name="unlock_position_center_right">По центру справа</string>
+    <string name="unlock_position_bottom_left">Снизу слева</string>
+    <string name="unlock_position_bottom_center">Снизу по центру</string>
+    <string name="unlock_position_bottom_right">Снизу справа</string>
 </resources>
