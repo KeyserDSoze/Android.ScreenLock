@@ -5,7 +5,8 @@ import android.os.Bundle
 
 /**
  * Tiny no-display activity used only so a Quick Settings tap can collapse the
- * shade before the accessibility overlay is shown over the current app.
+ * shade before the accessibility service starts (or cancels) the configured
+ * delayed lock over the current app.
  */
 class ToggleLockActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
