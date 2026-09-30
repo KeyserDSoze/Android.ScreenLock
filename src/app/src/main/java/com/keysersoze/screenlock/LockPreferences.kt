@@ -3,15 +3,14 @@ package com.keysersoze.screenlock
 import android.content.ComponentName
 import android.content.Context
 import android.provider.Settings
-import android.service.quicksettings.TileService
 
 object LockPreferences {
     private const val PREFS = "screen_lock_preferences"
     private const val KEY_UNLOCK_SECONDS = "unlock_seconds"
+    private const val KEY_ACTIVATION_DELAY_SECONDS = "activation_delay_seconds"
     private const val KEY_DIM_PERCENT = "dim_percent"
     private const val KEY_SHOW_HINT = "show_hint"
     private const val KEY_HAPTICS = "haptics"
-    private const val KEY_LOCKED = "locked"
 
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -20,6 +19,13 @@ object LockPreferences {
 
     fun setUnlockSeconds(context: Context, seconds: Int) {
         prefs(context).edit().putInt(KEY_UNLOCK_SECONDS, seconds.coerceIn(3, 12)).apply()
+    }
+
+    fun activationDelaySeconds(context: Context): Int =
+        prefs(context).getInt(KEY_ACTIVATION_DELAY_SECONDS, 2)
+
+    fun setActivationDelaySeconds(context: Context, seconds: Int) {
+        prefs(context).edit().putInt(KEY_ACTIVATION_DELAY_SECONDS, seconds.coerceIn(0, 5)).apply()
     }
 
     fun dimPercent(context: Context): Int = prefs(context).getInt(KEY_DIM_PERCENT, 8)
@@ -38,18 +44,6 @@ object LockPreferences {
 
     fun setHaptics(context: Context, value: Boolean) {
         prefs(context).edit().putBoolean(KEY_HAPTICS, value).apply()
-    }
-
-    fun isLocked(context: Context): Boolean = prefs(context).getBoolean(KEY_LOCKED, false)
-
-    fun setLocked(context: Context, value: Boolean) {
-        prefs(context).edit().putBoolean(KEY_LOCKED, value).apply()
-        runCatching {
-            TileService.requestListeningState(
-                context,
-                ComponentName(context, ScreenLockTileService::class.java),
-            )
-        }
     }
 
     fun isAccessibilityEnabled(context: Context): Boolean {
