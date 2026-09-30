@@ -8,12 +8,12 @@
 2. Apri Screen Lock e abilita il suo servizio di accessibilità. Il servizio **non legge il contenuto dello schermo** (`canRetrieveWindowContent=false`): usa il permesso per creare un `TYPE_ACCESSIBILITY_OVERLAY` touchable sopra l'app corrente.
 3. Aggiungi **Screen Lock** ai Comandi rapidi Android dall'app o dal pannello di modifica delle tile.
 4. Avvia la chiamata in Telegram (o qualunque altra app), abbassa i Comandi rapidi e tocca **Screen Lock**.
-5. Il pannello viene richiuso e compare un overlay quasi trasparente che assorbe i tocchi e mantiene lo schermo acceso.
-6. Per sbloccare, tieni premuto **al centro dello schermo** per il tempo configurato (6 secondi di default). Se sposti troppo il dito o lo sollevi, il conteggio si annulla.
+5. Il pannello viene richiuso; dopo il ritardo configurato (2 secondi di default) compare un overlay quasi trasparente che assorbe i tocchi e mantiene lo schermo acceso.
+6. Il bersaglio di sblocco è visibile per un istante e poi diventa molto discreto. Per sbloccare, tieni premuto **al centro dello schermo** per il tempo configurato (6 secondi di default). Movimento eccessivo, rilascio o multitouch annullano il conteggio.
 
 ## Limiti Android
 
-Screen Lock blocca i normali tocchi consegnati alle app sotto l'overlay. Android conserva intenzionalmente alcune vie di sicurezza che una normale app non può neutralizzare del tutto: tasto di accensione, emergenze e alcune interazioni della UI di sistema possono restare disponibili a seconda del dispositivo/ROM. Non è una modalità kiosk né modifica Telegram.
+Screen Lock blocca i normali tocchi consegnati alle app sotto l'overlay. Su Android 12/API 31 e successivi prova anche a richiudere la tendina notifiche quando viene aperta durante il lock. Android conserva intenzionalmente alcune vie di sicurezza che una normale app non può neutralizzare del tutto: tasto di accensione, emergenze e alcune interazioni della UI di sistema possono restare disponibili a seconda del dispositivo/ROM. Non è una modalità kiosk né modifica Telegram.
 
 ## Privacy
 
@@ -37,7 +37,7 @@ Per compilare localmente, apri `src/` con Android Studio oppure usa Gradle 9.6 c
 
 ```bash
 cd src
-gradle :app:assembleDebug
+gradle :app:testDebugUnitTest :app:assembleDebug
 ```
 
 L'APK viene prodotto in `src/app/build/outputs/apk/debug/app-debug.apk`.
@@ -56,6 +56,7 @@ git push
 Quando un nuovo `VERSION` arriva su `main`, la GitHub Action:
 
 - valida che il tag `vX.Y.Z` non esista già;
+- esegue i test JVM della logica di sblocco;
 - compila un APK debug **installabile**;
 - calcola SHA-256;
 - crea automaticamente la GitHub Release e allega APK + checksum.
