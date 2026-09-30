@@ -5,21 +5,23 @@
 ## Come funziona
 
 1. Installa l'APK dalla pagina **Releases**.
-2. Apri Screen Lock e segui la configurazione guidata. Prima di aprire le Impostazioni Android, l'app spiega dove trovare **Screen Lock** e quale interruttore attivare. Il servizio **non legge il contenuto dello schermo** (`canRetrieveWindowContent=false`): usa il permesso per creare un `TYPE_ACCESSIBILITY_OVERLAY` touchable sopra l'app corrente.
-3. Quando torni nell'app dopo l'abilitazione, su Android 13+ Screen Lock richiede automaticamente di aggiungere il pulsante ai **Comandi rapidi**. Sulle versioni precedenti mostra le istruzioni per aggiungerlo manualmente.
+2. Apri Screen Lock e segui la configurazione guidata. Android ti chiede di consentire a **Screen Lock** di mostrarsi sopra le altre app. È il permesso speciale `SYSTEM_ALERT_WINDOW`, verificato con `Settings.canDrawOverlays()`.
+3. Quando torni nell'app dopo aver concesso il permesso, su Android 13+ Screen Lock richiede automaticamente di aggiungere il pulsante ai **Comandi rapidi**. Sulle versioni precedenti mostra le istruzioni per aggiungerlo manualmente.
 4. Avvia la chiamata in Telegram (o qualunque altra app), abbassa i Comandi rapidi e tocca **Screen Lock**.
-5. Il pannello viene richiuso; dopo il ritardo configurato (2 secondi di default) compare un overlay quasi trasparente che assorbe i tocchi e mantiene lo schermo acceso.
+5. Il pannello viene richiuso; dopo il ritardo configurato (2 secondi di default) parte un foreground service e compare un `TYPE_APPLICATION_OVERLAY` quasi trasparente che assorbe i tocchi e mantiene lo schermo acceso.
 6. Il bersaglio di sblocco è visibile per un istante e poi diventa molto discreto. Per sbloccare, tieni premuto **al centro dello schermo** per il tempo configurato (6 secondi di default). Movimento eccessivo, rilascio o multitouch annullano il conteggio.
 
 ## Limiti Android
 
-Screen Lock blocca i normali tocchi consegnati alle app sotto l'overlay. Su Android 12/API 31 e successivi prova anche a richiudere la tendina notifiche quando viene aperta durante il lock. Android conserva intenzionalmente alcune vie di sicurezza che una normale app non può neutralizzare del tutto: tasto di accensione, emergenze e alcune interazioni della UI di sistema possono restare disponibili a seconda del dispositivo/ROM. Non è una modalità kiosk né modifica Telegram.
+Screen Lock blocca i normali tocchi consegnati alle app sotto l'overlay. Non usa più un Accessibility Service: questo evita le restrizioni aggiuntive applicate da alcune versioni/ROM Android agli APK installati da browser. Un `TYPE_APPLICATION_OVERLAY` resta però sotto le finestre critiche di sistema, quindi tendina notifiche, tasto di accensione, emergenze e alcune UI di sistema rimangono disponibili. Non è una modalità kiosk né modifica Telegram.
 
 ## Privacy
 
 - Nessun permesso Internet.
 - Nessun account, analytics o tracking.
+- Nessun servizio di Accessibilità.
 - Nessuna lettura del contenuto delle finestre.
+- Il foreground service esiste solo mentre il blocco è in attivazione o attivo.
 - Preferenze solo locali sul dispositivo.
 
 ## Sviluppo
@@ -44,7 +46,7 @@ L'APK viene prodotto in `src/app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Versioni e release
 
-La versione è conservata nel file [`VERSION`](VERSION), inizialmente `0.0.1`. Per incrementarla:
+La versione è conservata nel file [`VERSION`](VERSION). Per incrementarla:
 
 ```bash
 ./scripts/bump-version.sh patch   # oppure minor / major
@@ -83,3 +85,8 @@ La pipeline conserva la debug keystore nella cache GitHub per rendere normalment
 ## Licenza
 
 MIT.
+
+
+## Migrazione dalla 0.0.3
+
+Dalla versione 0.0.4 Screen Lock non usa più Accessibilità. Dopo l'aggiornamento apri l'app e concedi **Mostra sopra altre app**; poi usa o aggiungi la tile dei Comandi rapidi. L'eventuale vecchia autorizzazione di Accessibilità non è più necessaria per Screen Lock.
