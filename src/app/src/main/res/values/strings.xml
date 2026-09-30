@@ -109,4 +109,19 @@
     <string name="overlay_continue_press">Keep holding…</string>
     <string name="overlay_hold_to_unlock_format">Hold for %1$ds to unlock</string>
     <string name="download_description">Downloading update</string>
+    <string name="hero_image_content_description">Screen Lock protecting a video call from accidental touches</string>
+    <string name="unlock_radius_title">Unlock target radius</string>
+    <string name="dp_format">%1$d dp</string>
+    <string name="unlock_position_title">Unlock target position</string>
+    <string name="unlock_position_desc">Choose one of the 9 standard screen positions. The target keeps a safe margin from system edges.</string>
+    <string name="unlock_position_selected_format">Selected: %1$s</string>
+    <string name="unlock_position_top_left">Top left</string>
+    <string name="unlock_position_top_center">Top center</string>
+    <string name="unlock_position_top_right">Top right</string>
+    <string name="unlock_position_center_left">Center left</string>
+    <string name="unlock_position_center">Center</string>
+    <string name="unlock_position_center_right">Center right</string>
+    <string name="unlock_position_bottom_left">Bottom left</string>
+    <string name="unlock_position_bottom_center">Bottom center</string>
+    <string name="unlock_position_bottom_right">Bottom right</string>
 </resources>
