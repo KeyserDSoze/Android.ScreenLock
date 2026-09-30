@@ -10,6 +10,8 @@ object LockPreferences {
     private const val KEY_DIM_PERCENT = "dim_percent"
     private const val KEY_SHOW_HINT = "show_hint"
     private const val KEY_HAPTICS = "haptics"
+    private const val KEY_IMMERSIVE_SHIELD = "immersive_shield"
+    private const val KEY_AUTO_UPDATES = "auto_updates"
 
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -43,6 +45,20 @@ object LockPreferences {
 
     fun setHaptics(context: Context, value: Boolean) {
         prefs(context).edit().putBoolean(KEY_HAPTICS, value).apply()
+    }
+
+    fun immersiveShield(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_IMMERSIVE_SHIELD, false)
+
+    fun setImmersiveShield(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_IMMERSIVE_SHIELD, value).apply()
+    }
+
+    fun autoUpdates(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_AUTO_UPDATES, true)
+
+    fun setAutoUpdates(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_AUTO_UPDATES, value).apply()
     }
 
     fun canDrawOverlays(context: Context): Boolean = Settings.canDrawOverlays(context)
