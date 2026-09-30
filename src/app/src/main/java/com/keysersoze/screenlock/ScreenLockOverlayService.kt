@@ -5,7 +5,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -19,7 +18,6 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.SystemClock
-import android.service.quicksettings.TileService
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
@@ -27,12 +25,6 @@ import android.view.WindowManager
 import kotlin.math.min
 
 class ScreenLockOverlayService : Service() {
-
-    enum class LockState {
-        IDLE,
-        ARMING,
-        LOCKED,
-    }
 
     private val windowManager by lazy { getSystemService(WINDOW_SERVICE) as WindowManager }
     private val handler = Handler(Looper.getMainLooper())
@@ -42,7 +34,7 @@ class ScreenLockOverlayService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        publishState(this, LockState.IDLE)
+        ScreenLockRuntime.publish(this, ScreenLockRuntime.LockState.IDLE)
         createNotificationChannel()
     }
 
@@ -68,14 +60,14 @@ class ScreenLockOverlayService : Service() {
     override fun onDestroy() {
         handler.removeCallbacks(pendingLockRunnable)
         removeOverlay()
-        publishState(this, LockState.IDLE)
+        ScreenLockRuntime.publish(this, ScreenLockRuntime.LockState.IDLE)
         super.onDestroy()
     }
 
     private fun toggleLock() {
         when {
             overlay != null -> finishLock()
-            runtimeState() == LockState.ARMING -> finishLock()
+            ScreenLockRuntime.state == ScreenLockRuntime.LockState.ARMING -> finishLock()
             else -> scheduleLock()
         }
     }
@@ -93,15 +85,15 @@ class ScreenLockOverlayService : Service() {
         }
 
         handler.removeCallbacks(pendingLockRunnable)
-        publishState(this, LockState.ARMING)
+        ScreenLockRuntime.publish(this, ScreenLockRuntime.LockState.ARMING)
         updateNotification()
         handler.postDelayed(pendingLockRunnable, delayMs)
     }
 
     private fun cancelPendingLock() {
         handler.removeCallbacks(pendingLockRunnable)
-        if (runtimeState() == LockState.ARMING) {
-            publishState(this, LockState.IDLE)
+        if (ScreenLockRuntime.state == ScreenLockRuntime.LockState.ARMING) {
+            ScreenLockRuntime.publish(this, ScreenLockRuntime.LockState.IDLE)
         }
     }
 
@@ -142,11 +134,11 @@ class ScreenLockOverlayService : Service() {
         runCatching {
             windowManager.addView(view, params)
             overlay = view
-            publishState(this, LockState.LOCKED)
+            ScreenLockRuntime.publish(this, ScreenLockRuntime.LockState.LOCKED)
             updateNotification()
         }.onFailure {
             overlay = null
-            publishState(this, LockState.IDLE)
+            ScreenLockRuntime.publish(this, ScreenLockRuntime.LockState.IDLE)
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }
@@ -155,7 +147,7 @@ class ScreenLockOverlayService : Service() {
     private fun finishLock() {
         handler.removeCallbacks(pendingLockRunnable)
         removeOverlay()
-        publishState(this, LockState.IDLE)
+        ScreenLockRuntime.publish(this, ScreenLockRuntime.LockState.IDLE)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -196,10 +188,11 @@ class ScreenLockOverlayService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
 
-        val text = when (runtimeState()) {
-            LockState.ARMING -> "Blocco in attivazione…"
-            LockState.LOCKED -> "Tocchi bloccati · tieni premuto al centro per sbloccare"
-            LockState.IDLE -> "Preparazione del blocco…"
+        val text = when (ScreenLockRuntime.state) {
+            ScreenLockRuntime.LockState.ARMING -> "Blocco in attivazione…"
+            ScreenLockRuntime.LockState.LOCKED ->
+                "Tocchi bloccati · tieni premuto al centro per sbloccare"
+            ScreenLockRuntime.LockState.IDLE -> "Preparazione del blocco…"
         }
 
         val builder = if (Build.VERSION.SDK_INT >= 26) {
@@ -439,21 +432,6 @@ class ScreenLockOverlayService : Service() {
         private const val NOTIFICATION_CHANNEL_ID = "screen_lock_active"
         private const val NOTIFICATION_ID = 1001
         private const val HINT_FULL_VISIBILITY_MS = 1_600L
-
-        @Volatile
-        private var state: LockState = LockState.IDLE
-
-        fun runtimeState(): LockState = state
-
-        private fun publishState(context: Context, newState: LockState) {
-            state = newState
-            runCatching {
-                TileService.requestListeningState(
-                    context,
-                    ComponentName(context, ScreenLockTileService::class.java),
-                )
-            }
-        }
 
         fun start(context: Context, action: String) {
             val intent = Intent(context, ScreenLockOverlayService::class.java).setAction(action)
