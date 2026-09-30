@@ -47,6 +47,18 @@ jobs:
         with:
           gradle-version: '9.6.0'
 
+      - name: Generate ephemeral CI signing key
+        shell: bash
+        run: |
+          keytool -genkeypair -noprompt             -keystore "$RUNNER_TEMP/ci-signing.jks"             -storetype JKS             -alias screenlock             -keyalg RSA             -keysize 2048             -validity 2             -storepass ci-only-password             -keypass ci-only-password             -dname "CN=Screen Lock CI"
+
       - name: Test and compile
         working-directory: src
+        env:
+          SCREENLOCK_KEYSTORE_PATH: ${{ runner.temp }}/ci-signing.jks
+          SCREENLOCK_KEYSTORE_PASSWORD: ci-only-password
         run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
+
+      - name: Verify CI APK signature
+        run: |
+          "$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --print-certs             src/app/build/outputs/apk/debug/app-debug.apk
