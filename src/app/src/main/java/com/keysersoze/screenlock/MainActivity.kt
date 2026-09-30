@@ -92,6 +92,8 @@ class MainActivity : ComponentActivity() {
                     showShadeProtectionHelp = showShadeProtectionHelp,
                     activationDelaySeconds = LockPreferences.activationDelaySeconds(this),
                     unlockSeconds = LockPreferences.unlockSeconds(this),
+                    unlockRadiusDp = LockPreferences.unlockRadiusDp(this),
+                    unlockPosition = LockPreferences.unlockPosition(this),
                     dimPercent = LockPreferences.dimPercent(this),
                     showHint = LockPreferences.showHint(this),
                     haptics = LockPreferences.haptics(this),
@@ -138,6 +140,8 @@ class MainActivity : ComponentActivity() {
                         LockPreferences.setActivationDelaySeconds(this, it)
                     },
                     onUnlockSecondsChanged = { LockPreferences.setUnlockSeconds(this, it) },
+                    onUnlockRadiusChanged = { LockPreferences.setUnlockRadiusDp(this, it) },
+                    onUnlockPositionChanged = { LockPreferences.setUnlockPosition(this, it) },
                     onDimPercentChanged = { LockPreferences.setDimPercent(this, it) },
                     onShowHintChanged = { LockPreferences.setShowHint(this, it) },
                     onHapticsChanged = { LockPreferences.setHaptics(this, it) },
