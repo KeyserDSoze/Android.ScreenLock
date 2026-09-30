@@ -1,4 +1,5 @@
 # A workflow-only fix may retry the current VERSION until its tag exists.
+# Remove this retry hook after the first release is verified.
 name: Release APK
 
 on:
