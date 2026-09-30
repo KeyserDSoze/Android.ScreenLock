@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.keysersoze.screenlock.UpdateInfo
 
 @Composable
 fun ScreenLockApp(
@@ -61,6 +62,14 @@ fun ScreenLockApp(
     dimPercent: Int,
     showHint: Boolean,
     haptics: Boolean,
+    immersiveShield: Boolean,
+    autoUpdates: Boolean,
+    currentVersion: String,
+    updateInfo: UpdateInfo?,
+    updateChecking: Boolean,
+    updateDownloading: Boolean,
+    updateReady: Boolean,
+    updateMessage: String?,
     tileMessage: String?,
     onEnableOverlay: () -> Unit,
     onDismissOverlayHelp: () -> Unit,
@@ -72,6 +81,11 @@ fun ScreenLockApp(
     onDimPercentChanged: (Int) -> Unit,
     onShowHintChanged: (Boolean) -> Unit,
     onHapticsChanged: (Boolean) -> Unit,
+    onImmersiveShieldChanged: (Boolean) -> Unit,
+    onAutoUpdatesChanged: (Boolean) -> Unit,
+    onCheckUpdates: () -> Unit,
+    onDownloadUpdate: () -> Unit,
+    onInstallUpdate: () -> Unit,
 ) {
     if (showOverlayHelp) {
         OverlayHelpDialog(
@@ -116,17 +130,34 @@ fun ScreenLockApp(
                     )
                 }
                 item {
+                    UpdateCard(
+                        currentVersion = currentVersion,
+                        updateInfo = updateInfo,
+                        checking = updateChecking,
+                        downloading = updateDownloading,
+                        ready = updateReady,
+                        autoUpdates = autoUpdates,
+                        message = updateMessage,
+                        onAutoUpdatesChanged = onAutoUpdatesChanged,
+                        onCheck = onCheckUpdates,
+                        onDownload = onDownloadUpdate,
+                        onInstall = onInstallUpdate,
+                    )
+                }
+                item {
                     SettingsCard(
                         activationDelaySeconds = activationDelaySeconds,
                         unlockSeconds = unlockSeconds,
                         dimPercent = dimPercent,
                         showHint = showHint,
                         haptics = haptics,
+                        immersiveShield = immersiveShield,
                         onActivationDelayChanged = onActivationDelayChanged,
                         onUnlockSecondsChanged = onUnlockSecondsChanged,
                         onDimPercentChanged = onDimPercentChanged,
                         onShowHintChanged = onShowHintChanged,
                         onHapticsChanged = onHapticsChanged,
+                        onImmersiveShieldChanged = onImmersiveShieldChanged,
                     )
                 }
                 item { PrivacyCard() }
@@ -324,23 +355,118 @@ private fun OverlayHelpDialog(
 }
 
 @Composable
+private fun UpdateCard(
+    currentVersion: String,
+    updateInfo: UpdateInfo?,
+    checking: Boolean,
+    downloading: Boolean,
+    ready: Boolean,
+    autoUpdates: Boolean,
+    message: String?,
+    onAutoUpdatesChanged: (Boolean) -> Unit,
+    onCheck: () -> Unit,
+    onDownload: () -> Unit,
+    onInstall: () -> Unit,
+) {
+    var automatic by remember(autoUpdates) { mutableStateOf(autoUpdates) }
+
+    AppCard {
+        Text(
+            text = "Aggiornamenti",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            text = "Versione installata: $currentVersion",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+
+        SwitchRow(
+            title = "Aggiornamenti automatici",
+            subtitle = "Controlla GitHub all’avvio e scarica automaticamente una release più recente. Android chiederà comunque conferma prima dell’installazione.",
+            checked = automatic,
+            onCheckedChange = {
+                automatic = it
+                onAutoUpdatesChanged(it)
+            },
+        )
+
+        when {
+            ready -> {
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onInstall,
+                ) {
+                    Text("Installa aggiornamento")
+                }
+            }
+
+            downloading -> {
+                Text(
+                    text = "Download in corso…",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+
+            updateInfo != null -> {
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onDownload,
+                ) {
+                    Text("Scarica Screen Lock ${updateInfo.version}")
+                }
+            }
+
+            else -> {
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !checking,
+                    onClick = onCheck,
+                ) {
+                    Text(if (checking) "Controllo…" else "Controlla aggiornamenti")
+                }
+            }
+        }
+
+        AnimatedVisibility(visible = message != null) {
+            Text(
+                text = message.orEmpty(),
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+
+        Text(
+            text = "Il controllo usa solo l’API pubblica delle release GitHub. Nessun account, analytics o tracking.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
+}
+
+@Composable
 private fun SettingsCard(
     activationDelaySeconds: Int,
     unlockSeconds: Int,
     dimPercent: Int,
     showHint: Boolean,
     haptics: Boolean,
+    immersiveShield: Boolean,
     onActivationDelayChanged: (Int) -> Unit,
     onUnlockSecondsChanged: (Int) -> Unit,
     onDimPercentChanged: (Int) -> Unit,
     onShowHintChanged: (Boolean) -> Unit,
     onHapticsChanged: (Boolean) -> Unit,
+    onImmersiveShieldChanged: (Boolean) -> Unit,
 ) {
     var delay by remember(activationDelaySeconds) { mutableIntStateOf(activationDelaySeconds) }
     var seconds by remember(unlockSeconds) { mutableIntStateOf(unlockSeconds) }
     var dim by remember(dimPercent) { mutableFloatStateOf(dimPercent.toFloat()) }
     var hint by remember(showHint) { mutableStateOf(showHint) }
     var vibration by remember(haptics) { mutableStateOf(haptics) }
+    var shield by remember(immersiveShield) { mutableStateOf(immersiveShield) }
 
     AppCard {
         Text(
@@ -412,6 +538,16 @@ private fun SettingsCard(
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
 
         SwitchRow(
+            title = "Protezione tendina (sperimentale)",
+            subtitle = "Usa una schermata trasparente immersiva sopra la chiamata e nasconde le barre di sistema. Riduce gli swipe accidentali, ma Android può ancora mostrare barre transitorie con un gesto dal bordo.",
+            checked = shield,
+            onCheckedChange = {
+                shield = it
+                onImmersiveShieldChanged(it)
+            },
+        )
+
+        SwitchRow(
             title = "Mostra istruzione al centro",
             subtitle = "Mostra il punto di sblocco all’attivazione; dopo poco diventa quasi invisibile e riappare durante la pressione.",
             checked = hint,
@@ -441,7 +577,7 @@ private fun PrivacyCard() {
             fontWeight = FontWeight.Bold,
         )
         Text(
-            text = "Nessun permesso Internet. Nessun account. Nessuna analisi del contenuto dello schermo. Screen Lock usa soltanto il permesso “Mostra sopra altre app” per creare l’overlay che cattura i tocchi.",
+            text = "Nessun account e nessuna analisi del contenuto dello schermo. Il permesso Internet serve solo per controllare e scaricare le release ufficiali da GitHub. L’overlay locale cattura i tocchi senza leggere ciò che c’è sullo schermo.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
         )
