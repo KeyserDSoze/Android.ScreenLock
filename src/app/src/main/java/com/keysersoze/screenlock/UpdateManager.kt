@@ -90,6 +90,17 @@ object UpdateManager {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getLong(KEY_DOWNLOAD_ID, -1L)
 
+    fun downloadedVersion(context: Context): String? =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(KEY_DOWNLOAD_VERSION, null)
+
+    fun reconcileInstalledVersion(context: Context) {
+        val downloaded = downloadedVersion(context) ?: return
+        if (!isNewer(downloaded, BuildConfig.VERSION_NAME)) {
+            clearDownload(context)
+        }
+    }
+
     fun clearDownload(context: Context) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit()
@@ -98,13 +109,23 @@ object UpdateManager {
             .apply()
     }
 
-    fun isComplete(context: Context, id: Long = currentDownloadId(context)): Boolean {
-        if (id < 0L) return false
+    fun isComplete(context: Context, id: Long = currentDownloadId(context)): Boolean =
+        downloadStatus(context, id) == DownloadManager.STATUS_SUCCESSFUL
+
+    fun isInProgress(context: Context, id: Long = currentDownloadId(context)): Boolean =
+        downloadStatus(context, id) in setOf(
+            DownloadManager.STATUS_PENDING,
+            DownloadManager.STATUS_RUNNING,
+            DownloadManager.STATUS_PAUSED,
+        )
+
+    private fun downloadStatus(context: Context, id: Long): Int {
+        if (id < 0L) return -1
         val manager = context.getSystemService(DownloadManager::class.java)
         manager.query(DownloadManager.Query().setFilterById(id)).use { cursor ->
-            if (!cursor.moveToFirst()) return false
+            if (!cursor.moveToFirst()) return -1
             val index = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-            return index >= 0 && cursor.getInt(index) == DownloadManager.STATUS_SUCCESSFUL
+            return if (index >= 0) cursor.getInt(index) else -1
         }
     }
 
