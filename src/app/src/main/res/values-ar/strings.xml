@@ -109,4 +109,19 @@
     <string name="overlay_continue_press">استمر في الضغط…</string>
     <string name="overlay_hold_to_unlock_format">اضغط %1$dث لإلغاء القفل</string>
     <string name="download_description">جارٍ تنزيل التحديث</string>
+    <string name="hero_image_content_description">يحمي Screen Lock مكالمة فيديو من اللمسات العرضية</string>
+    <string name="unlock_radius_title">نصف قطر هدف إلغاء القفل</string>
+    <string name="dp_format">%1$d dp</string>
+    <string name="unlock_position_title">موضع هدف إلغاء القفل</string>
+    <string name="unlock_position_desc">اختر واحدًا من 9 مواضع قياسية على الشاشة. يحافظ الهدف على هامش آمن من حواف النظام.</string>
+    <string name="unlock_position_selected_format">المحدد: %1$s</string>
+    <string name="unlock_position_top_left">أعلى اليسار</string>
+    <string name="unlock_position_top_center">أعلى الوسط</string>
+    <string name="unlock_position_top_right">أعلى اليمين</string>
+    <string name="unlock_position_center_left">الوسط يسار</string>
+    <string name="unlock_position_center">الوسط</string>
+    <string name="unlock_position_center_right">الوسط يمين</string>
+    <string name="unlock_position_bottom_left">أسفل اليسار</string>
+    <string name="unlock_position_bottom_center">أسفل الوسط</string>
+    <string name="unlock_position_bottom_right">أسفل اليمين</string>
 </resources>
