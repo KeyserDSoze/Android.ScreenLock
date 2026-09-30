@@ -54,17 +54,17 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun ScreenLockApp(
-    accessibilityEnabled: Boolean,
-    showAccessibilityHelp: Boolean,
+    overlayEnabled: Boolean,
+    showOverlayHelp: Boolean,
     activationDelaySeconds: Int,
     unlockSeconds: Int,
     dimPercent: Int,
     showHint: Boolean,
     haptics: Boolean,
     tileMessage: String?,
-    onEnableAccessibility: () -> Unit,
-    onDismissAccessibilityHelp: () -> Unit,
-    onOpenAccessibilitySettings: () -> Unit,
+    onEnableOverlay: () -> Unit,
+    onDismissOverlayHelp: () -> Unit,
+    onOpenOverlaySettings: () -> Unit,
     onAddQuickTile: () -> Unit,
     onTestLock: () -> Unit,
     onActivationDelayChanged: (Int) -> Unit,
@@ -73,10 +73,10 @@ fun ScreenLockApp(
     onShowHintChanged: (Boolean) -> Unit,
     onHapticsChanged: (Boolean) -> Unit,
 ) {
-    if (showAccessibilityHelp) {
-        AccessibilityHelpDialog(
-            onDismiss = onDismissAccessibilityHelp,
-            onContinue = onOpenAccessibilitySettings,
+    if (showOverlayHelp) {
+        OverlayHelpDialog(
+            onDismiss = onDismissOverlayHelp,
+            onContinue = onOpenOverlaySettings,
         )
     }
 
@@ -105,12 +105,12 @@ fun ScreenLockApp(
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                item { Hero(accessibilityEnabled) }
+                item { Hero(overlayEnabled) }
                 item {
                     SetupCard(
-                        enabled = accessibilityEnabled,
+                        enabled = overlayEnabled,
                         tileMessage = tileMessage,
-                        onEnableAccessibility = onEnableAccessibility,
+                        onEnableOverlay = onEnableOverlay,
                         onAddQuickTile = onAddQuickTile,
                         onTestLock = onTestLock,
                     )
@@ -204,7 +204,7 @@ private fun StatusPill(enabled: Boolean) {
                 ),
         )
         Text(
-            text = if (enabled) "Screen Lock abilitato" else "Passaggio 1 da completare",
+            text = if (enabled) "Permesso overlay pronto" else "Passaggio 1 da completare",
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
         )
@@ -215,7 +215,7 @@ private fun StatusPill(enabled: Boolean) {
 private fun SetupCard(
     enabled: Boolean,
     tileMessage: String?,
-    onEnableAccessibility: () -> Unit,
+    onEnableOverlay: () -> Unit,
     onAddQuickTile: () -> Unit,
     onTestLock: () -> Unit,
 ) {
@@ -229,7 +229,7 @@ private fun SetupCard(
             text = if (enabled) {
                 "Passaggio 2 di 2 · Aggiungi il pulsante Screen Lock alla tendina dei Comandi rapidi. Su Android 13 o successivi comparirà direttamente la richiesta di sistema."
             } else {
-                "Passaggio 1 di 2 · Android deve autorizzare Screen Lock a mostrare il blocco sopra le altre app. Ti indichiamo esattamente cosa toccare prima di aprire le Impostazioni."
+                "Passaggio 1 di 2 · Consenti a Screen Lock di comparire sopra le altre app. È il solo permesso speciale necessario per intercettare i tocchi."
             },
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
@@ -240,12 +240,12 @@ private fun SetupCard(
         if (!enabled) {
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = onEnableAccessibility,
+                onClick = onEnableOverlay,
             ) {
-                Text("1 · Abilita Screen Lock")
+                Text("1 · Consenti sopra le altre app")
             }
             Text(
-                text = "Non devi concedere accesso ai contenuti dello schermo: Screen Lock è configurato per non leggerli.",
+                text = "Non serve più abilitare Screen Lock in Accessibilità: così evitiamo anche il blocco “Controlled by Restricted Setting” degli APK installati da browser.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -280,7 +280,7 @@ private fun SetupCard(
 }
 
 @Composable
-private fun AccessibilityHelpDialog(
+private fun OverlayHelpDialog(
     onDismiss: () -> Unit,
     onContinue: () -> Unit,
 ) {
@@ -288,23 +288,23 @@ private fun AccessibilityHelpDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Attiva Screen Lock in Android",
+                text = "Consenti l’overlay di Screen Lock",
                 fontWeight = FontWeight.Bold,
             )
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "Si aprirà la schermata Accessibilità di Android. I nomi possono cambiare leggermente in base al telefono.",
+                    text = "Si aprirà la schermata Android per le app che possono comparire sopra le altre app. Il nome della voce può cambiare leggermente in base al telefono.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    text = "1. Cerca “Screen Lock” (a volte è dentro “App scaricate” o “Servizi installati”).\n\n2. Tocca Screen Lock.\n\n3. Attiva “Usa Screen Lock” o l’interruttore equivalente.\n\n4. Conferma la richiesta di Android e torna qui.",
+                    text = "1. Se Android mostra un elenco, scegli “Screen Lock”.\n\n2. Attiva “Consenti visualizzazione sopra altre app”, “Mostra sopra altre app” o la voce equivalente.\n\n3. Torna a Screen Lock.",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                 )
                 Text(
-                    text = "Per sicurezza Android non consente all’app di attivare questo permesso da sola. Screen Lock non legge il contenuto dello schermo.",
+                    text = "Android richiede che sia tu ad attivare questo permesso. Screen Lock lo usa solo per mettere una superficie touch sopra la chiamata; non legge ciò che c’è sullo schermo.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -312,7 +312,7 @@ private fun AccessibilityHelpDialog(
         },
         confirmButton = {
             Button(onClick = onContinue) {
-                Text("Apri Accessibilità")
+                Text("Apri impostazione Android")
             }
         },
         dismissButton = {
@@ -441,12 +441,12 @@ private fun PrivacyCard() {
             fontWeight = FontWeight.Bold,
         )
         Text(
-            text = "Nessun permesso Internet. Nessun account. Nessuna analisi del contenuto dello schermo. Il servizio di accessibilità è configurato con lettura del contenuto disattivata: serve solo per l’overlay che cattura i tocchi.",
+            text = "Nessun permesso Internet. Nessun account. Nessuna analisi del contenuto dello schermo. Screen Lock usa soltanto il permesso “Mostra sopra altre app” per creare l’overlay che cattura i tocchi.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
         )
         Text(
-            text = "Quando Android lo consente, Screen Lock richiude anche la tendina notifiche se viene aperta durante il blocco. Power, emergenze e alcune UI di sistema restano comunque sotto il controllo di Android.",
+            text = "L’overlay copre le app ma resta sotto le finestre critiche di sistema: tendina notifiche, tasto Power, emergenze e alcune UI di sistema rimangono sotto il controllo di Android.",
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
             style = MaterialTheme.typography.bodySmall,
         )
