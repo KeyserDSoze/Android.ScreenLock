@@ -10,6 +10,7 @@
 4. Avvia la chiamata in Telegram (o qualunque altra app), abbassa i Comandi rapidi e tocca **Screen Lock**.
 5. Il pannello viene richiuso; dopo il ritardo configurato (2 secondi di default) parte un foreground service e compare un `TYPE_APPLICATION_OVERLAY` quasi trasparente che assorbe i tocchi e mantiene lo schermo acceso.
 6. Il bersaglio di sblocco è visibile per un istante e poi diventa molto discreto. Per sbloccare, tieni premuto **al centro dello schermo** per il tempo configurato (6 secondi di default). Movimento eccessivo, rilascio o multitouch annullano il conteggio.
+7. In impostazioni puoi attivare **Protezione tendina (sperimentale)**: usa una Activity trasparente in modalità immersiva per nascondere le barre di sistema e ridurre gli swipe accidentali. Android può comunque rivelare barre transitorie con un gesto dal bordo; un blocco assoluto della System UI richiede modalità device-owner/kiosk.
 
 ## Limiti Android
 
@@ -17,11 +18,11 @@ Screen Lock blocca i normali tocchi consegnati alle app sotto l'overlay. Non usa
 
 ## Privacy
 
-- Nessun permesso Internet.
 - Nessun account, analytics o tracking.
+- Internet viene usato solo dall'updater per leggere la release più recente dal repository GitHub e scaricare l'APK ufficiale.
 - Nessun servizio di Accessibilità.
 - Nessuna lettura del contenuto delle finestre.
-- Il foreground service esiste solo mentre il blocco è in attivazione o attivo.
+- Il foreground service esiste solo mentre il blocco overlay è in attivazione o attivo.
 - Preferenze solo locali sul dispositivo.
 
 ## Sviluppo
@@ -90,3 +91,10 @@ MIT.
 ## Migrazione dalla 0.0.3
 
 Dalla versione 0.0.4 Screen Lock non usa più Accessibilità. Dopo l'aggiornamento apri l'app e concedi **Mostra sopra altre app**; poi usa o aggiungi la tile dei Comandi rapidi. L'eventuale vecchia autorizzazione di Accessibilità non è più necessaria per Screen Lock.
+
+
+## Aggiornamenti interni
+
+Screen Lock può controllare automaticamente la release più recente su GitHub, scaricare l'APK tramite il Download Manager di Android e aprire l'installer. Android richiede comunque la conferma dell'utente per installare/aggiornare un APK sideloaded e, la prima volta, può richiedere di autorizzare Screen Lock come origine di installazione.
+
+Perché un aggiornamento possa essere installato sopra la versione precedente, tutte le release devono usare la stessa chiave di firma. La workflow di release richiede quindi i repository secrets `SCREENLOCK_KEYSTORE_B64` e `SCREENLOCK_KEYSTORE_PASSWORD`; se mancano, la release fallisce invece di generare un APK con una firma diversa.
