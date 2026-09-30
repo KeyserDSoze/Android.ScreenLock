@@ -26,6 +26,10 @@ import kotlin.math.min
 
 class ScreenLockOverlayService : Service() {
 
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLocaleManager.wrap(newBase))
+    }
+
     private val windowManager by lazy { getSystemService(WINDOW_SERVICE) as WindowManager }
     private val handler = Handler(Looper.getMainLooper())
     private var overlay: LockOverlayView? = null
@@ -189,10 +193,9 @@ class ScreenLockOverlayService : Service() {
         )
 
         val text = when (ScreenLockRuntime.state) {
-            ScreenLockRuntime.LockState.ARMING -> "Blocco in attivazione…"
-            ScreenLockRuntime.LockState.LOCKED ->
-                "Tocchi bloccati · tieni premuto al centro per sbloccare"
-            ScreenLockRuntime.LockState.IDLE -> "Preparazione del blocco…"
+            ScreenLockRuntime.LockState.ARMING -> getString(R.string.notification_arming)
+            ScreenLockRuntime.LockState.LOCKED -> getString(R.string.notification_locked)
+            ScreenLockRuntime.LockState.IDLE -> getString(R.string.notification_idle)
         }
 
         val builder = if (Build.VERSION.SDK_INT >= 26) {
@@ -376,7 +379,11 @@ class ScreenLockOverlayService : Service() {
                 paint.textSize = 13f * resources.displayMetrics.scaledDensity
                 val seconds = unlockDurationMs / 1_000L
                 canvas.drawText(
-                    if (tracker.isHolding) "Continua a premere…" else "Tieni premuto ${seconds}s per sbloccare",
+                    if (tracker.isHolding) {
+                        context.getString(R.string.overlay_continue_press)
+                    } else {
+                        context.getString(R.string.overlay_hold_to_unlock_format, seconds)
+                    },
                     cx,
                     cy + 46f * density,
                     paint,
