@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - VERSION
+      - .github/workflows/release.yml
   workflow_dispatch:
 
 permissions:
@@ -52,9 +53,12 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: ''
+          log-accepted-android-sdk-licenses: false
 
       - name: Install Android 37 SDK
-        run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
+        run: sdkmanager "platforms;android-37" "build-tools;36.0.0" "platform-tools"
 
       - name: Set up Gradle 9.6
         uses: gradle/actions/setup-gradle@v5
