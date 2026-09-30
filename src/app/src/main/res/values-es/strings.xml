@@ -109,4 +109,19 @@
     <string name="overlay_continue_press">Sigue pulsando…</string>
     <string name="overlay_hold_to_unlock_format">Mantén pulsado %1$ds para desbloquear</string>
     <string name="download_description">Descargando actualización</string>
+    <string name="hero_image_content_description">Screen Lock protege una videollamada de toques accidentales</string>
+    <string name="unlock_radius_title">Radio del objetivo de desbloqueo</string>
+    <string name="dp_format">%1$d dp</string>
+    <string name="unlock_position_title">Posición del objetivo de desbloqueo</string>
+    <string name="unlock_position_desc">Elige una de las 9 posiciones estándar de la pantalla. El objetivo mantiene un margen seguro respecto a los bordes del sistema.</string>
+    <string name="unlock_position_selected_format">Seleccionada: %1$s</string>
+    <string name="unlock_position_top_left">Arriba izquierda</string>
+    <string name="unlock_position_top_center">Arriba centro</string>
+    <string name="unlock_position_top_right">Arriba derecha</string>
+    <string name="unlock_position_center_left">Centro izquierda</string>
+    <string name="unlock_position_center">Centro</string>
+    <string name="unlock_position_center_right">Centro derecha</string>
+    <string name="unlock_position_bottom_left">Abajo izquierda</string>
+    <string name="unlock_position_bottom_center">Abajo centro</string>
+    <string name="unlock_position_bottom_right">Abajo derecha</string>
 </resources>
