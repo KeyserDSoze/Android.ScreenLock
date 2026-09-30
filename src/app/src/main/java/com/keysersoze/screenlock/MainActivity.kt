@@ -59,9 +59,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        UpdateManager.reconcileInstalledVersion(this)
         overlayEnabled = LockPreferences.canDrawOverlays(this)
         immersiveShield = LockPreferences.immersiveShield(this)
         autoUpdates = LockPreferences.autoUpdates(this)
+        updateDownloading = UpdateManager.isInProgress(this)
 
         setContent {
             ScreenLockTheme {
@@ -157,6 +159,8 @@ class MainActivity : ComponentActivity() {
             pendingTilePrompt = true
         }
 
+        updateDownloading = UpdateManager.isInProgress(this)
+
         if (pendingInstallAfterPermission && UpdateManager.canInstallPackages(this)) {
             pendingInstallAfterPermission = false
             UpdateManager.installDownloaded(this)
@@ -202,8 +206,15 @@ class MainActivity : ComponentActivity() {
                     if (!autoDownload) {
                         updateMessage = "Hai già l’ultima versione."
                     }
-                } else if (autoDownload && !UpdateManager.isComplete(this@MainActivity)) {
+                } else if (
+                    autoDownload &&
+                    !UpdateManager.isComplete(this@MainActivity) &&
+                    !UpdateManager.isInProgress(this@MainActivity)
+                ) {
                     downloadUpdate(info)
+                } else if (UpdateManager.isInProgress(this@MainActivity)) {
+                    updateDownloading = true
+                    updateMessage = "Download di Screen Lock ${info.version} in corso…"
                 } else {
                     updateMessage = "Nuova versione ${info.version} disponibile."
                 }
@@ -215,7 +226,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun downloadUpdate(info: UpdateInfo) {
-        if (updateDownloading || UpdateManager.isComplete(this)) return
+        if (
+            updateDownloading ||
+            UpdateManager.isInProgress(this) ||
+            UpdateManager.isComplete(this)
+        ) return
         runCatching {
             UpdateManager.enqueue(this, info)
         }.onSuccess {
