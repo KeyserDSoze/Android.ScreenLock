@@ -25,14 +25,6 @@
         </activity>
 
         <activity
-            android:name=".TouchShieldActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:theme="@style/Theme.ScreenLock.TouchShield" />
-
-        <activity
             android:name=".ToggleLockActivity"
             android:excludeFromRecents="true"
             android:exported="false"
