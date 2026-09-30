@@ -29,6 +29,16 @@ object AppLocaleManager {
         AppLanguageOption("ar", "العربية"),
         AppLanguageOption("hi", "हिन्दी"),
         AppLanguageOption("zh-CN", "简体中文"),
+        AppLanguageOption("ja", "日本語"),
+        AppLanguageOption("ko", "한국어"),
+        AppLanguageOption("id", "Bahasa Indonesia"),
+        AppLanguageOption("tr", "Türkçe"),
+        AppLanguageOption("vi", "Tiếng Việt"),
+        AppLanguageOption("bn", "বাংলা"),
+        AppLanguageOption("ur", "اردو"),
+        AppLanguageOption("fa", "فارسی"),
+        AppLanguageOption("pl", "Polski"),
+        AppLanguageOption("nl", "Nederlands"),
     )
 
     private val supportedCodes = supportedLanguages.map { it.code }.toSet()
@@ -108,6 +118,16 @@ object AppLocaleManager {
             "ar" -> "ar"
             "hi" -> "hi"
             "zh" -> "zh-CN"
+            "ja" -> "ja"
+            "ko" -> "ko"
+            "id", "in" -> "id"
+            "tr" -> "tr"
+            "vi" -> "vi"
+            "bn" -> "bn"
+            "ur" -> "ur"
+            "fa" -> "fa"
+            "pl" -> "pl"
+            "nl" -> "nl"
             "en" -> "en"
             else -> null
         }
@@ -134,6 +154,16 @@ object AppLocaleManager {
             "ar" -> "ar"
             "hi" -> "hi"
             "zh" -> "zh-CN"
+            "ja" -> "ja"
+            "ko" -> "ko"
+            "id", "in" -> "id"
+            "tr" -> "tr"
+            "vi" -> "vi"
+            "bn" -> "bn"
+            "ur" -> "ur"
+            "fa" -> "fa"
+            "pl" -> "pl"
+            "nl" -> "nl"
             else -> "en"
         }
     }
