@@ -18,21 +18,7 @@ class ScreenLockTileService : TileService() {
     override fun onClick() {
         super.onClick()
 
-        val active = ScreenLockRuntime.state != ScreenLockRuntime.LockState.IDLE
-        val immersive = LockPreferences.immersiveShield(this)
-
-        if (active) {
-            if (immersive) {
-                launchAndCollapse(
-                    TouchShieldActivity.intent(this, TouchShieldActivity.ACTION_UNLOCK),
-                )
-            } else {
-                launchAndCollapse(Intent(this, ToggleLockActivity::class.java))
-            }
-            return
-        }
-
-        if (!immersive && !LockPreferences.canDrawOverlays(this)) {
+        if (!LockPreferences.canDrawOverlays(this)) {
             val settingsIntent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:$packageName"),
@@ -41,19 +27,14 @@ class ScreenLockTileService : TileService() {
             return
         }
 
-        if (immersive) {
-            launchAndCollapse(
-                TouchShieldActivity.intent(this, TouchShieldActivity.ACTION_LOCK),
-            )
-        } else {
-            launchAndCollapse(Intent(this, ToggleLockActivity::class.java))
-        }
+        launchAndCollapse(Intent(this, ToggleLockActivity::class.java))
     }
 
     private fun updateTileState() {
         val tile = qsTile ?: return
-        val immersive = LockPreferences.immersiveShield(this)
-        val configured = immersive || LockPreferences.canDrawOverlays(this)
+        val configured = LockPreferences.canDrawOverlays(this)
+        val shadeProtection = LockPreferences.shadeProtection(this) &&
+            LockPreferences.isShadeProtectionAccessibilityEnabled(this)
         val state = ScreenLockRuntime.state
 
         tile.state = when {
@@ -66,6 +47,8 @@ class ScreenLockTileService : TileService() {
         tile.contentDescription = when {
             !configured -> getString(R.string.quick_tile_unavailable)
             state == ScreenLockRuntime.LockState.ARMING -> "Screen Lock in attivazione"
+            state == ScreenLockRuntime.LockState.LOCKED && shadeProtection ->
+                "Screen Lock attivo con protezione tendina"
             state == ScreenLockRuntime.LockState.LOCKED -> "Screen Lock attivo"
             else -> "Screen Lock pronto"
         }
@@ -73,8 +56,9 @@ class ScreenLockTileService : TileService() {
             tile.subtitle = when {
                 !configured -> "Configura"
                 state == ScreenLockRuntime.LockState.ARMING -> "Attivazione…"
+                state == ScreenLockRuntime.LockState.LOCKED && shadeProtection -> "Bloccato + tendina"
                 state == ScreenLockRuntime.LockState.LOCKED -> "Bloccato"
-                immersive -> "Scudo"
+                shadeProtection -> "Pronto + tendina"
                 else -> "Pronto"
             }
         }
@@ -86,11 +70,7 @@ class ScreenLockTileService : TileService() {
         if (Build.VERSION.SDK_INT >= 34) {
             val pendingIntent = PendingIntent.getActivity(
                 this,
-                when (intent.component?.className) {
-                    ToggleLockActivity::class.java.name -> 101
-                    TouchShieldActivity::class.java.name -> 103
-                    else -> 102
-                },
+                if (intent.component?.className == ToggleLockActivity::class.java.name) 101 else 102,
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
