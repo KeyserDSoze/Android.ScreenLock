@@ -137,7 +137,7 @@ object UpdateManager {
         }.getOrDefault(false)
     }
 
-    private fun isNewer(candidate: String, current: String): Boolean {
+    internal fun isNewer(candidate: String, current: String): Boolean {
         val left = candidate.split('.').mapNotNull(String::toIntOrNull)
         val right = current.split('.').mapNotNull(String::toIntOrNull)
         if (left.size != 3 || right.size != 3) return false
