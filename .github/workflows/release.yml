@@ -70,9 +70,9 @@ jobs:
           path: ~/.android/debug.keystore
           key: screen-lock-debug-keystore-v1
 
-      - name: Build installable APK
+      - name: Test and build installable APK
         working-directory: src
-        run: gradle --no-daemon :app:assembleDebug
+        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
 
       - name: Prepare release files
         id: artifact
