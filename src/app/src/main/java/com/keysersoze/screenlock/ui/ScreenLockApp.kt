@@ -2,8 +2,10 @@ package com.keysersoze.screenlock.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -49,13 +51,18 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.roundToInt
 import com.keysersoze.screenlock.AppLanguageOption
 import com.keysersoze.screenlock.R
+import com.keysersoze.screenlock.UnlockTargetPosition
 import com.keysersoze.screenlock.UpdateInfo
 
 @Composable
@@ -65,6 +72,8 @@ fun ScreenLockApp(
     showShadeProtectionHelp: Boolean,
     activationDelaySeconds: Int,
     unlockSeconds: Int,
+    unlockRadiusDp: Int,
+    unlockPosition: UnlockTargetPosition,
     dimPercent: Int,
     showHint: Boolean,
     haptics: Boolean,
@@ -91,6 +100,8 @@ fun ScreenLockApp(
     onTestLock: () -> Unit,
     onActivationDelayChanged: (Int) -> Unit,
     onUnlockSecondsChanged: (Int) -> Unit,
+    onUnlockRadiusChanged: (Int) -> Unit,
+    onUnlockPositionChanged: (UnlockTargetPosition) -> Unit,
     onDimPercentChanged: (Int) -> Unit,
     onShowHintChanged: (Boolean) -> Unit,
     onHapticsChanged: (Boolean) -> Unit,
@@ -177,6 +188,8 @@ fun ScreenLockApp(
                     SettingsCard(
                         activationDelaySeconds = activationDelaySeconds,
                         unlockSeconds = unlockSeconds,
+                        unlockRadiusDp = unlockRadiusDp,
+                        unlockPosition = unlockPosition,
                         dimPercent = dimPercent,
                         showHint = showHint,
                         haptics = haptics,
@@ -185,6 +198,8 @@ fun ScreenLockApp(
                         shadeProtectionMessage = shadeProtectionMessage,
                         onActivationDelayChanged = onActivationDelayChanged,
                         onUnlockSecondsChanged = onUnlockSecondsChanged,
+                        onUnlockRadiusChanged = onUnlockRadiusChanged,
+                        onUnlockPositionChanged = onUnlockPositionChanged,
                         onDimPercentChanged = onDimPercentChanged,
                         onShowHintChanged = onShowHintChanged,
                         onHapticsChanged = onHapticsChanged,
@@ -209,17 +224,11 @@ fun ScreenLockApp(
 @Composable
 private fun Hero(enabled: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-        Box(
-            modifier = Modifier
-                .size(74.dp)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            LockGlyph(
-                modifier = Modifier.size(40.dp),
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
+        Image(
+            painter = painterResource(R.drawable.screen_lock_brand_icon),
+            contentDescription = null,
+            modifier = Modifier.size(82.dp),
+        )
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
@@ -239,6 +248,16 @@ private fun Hero(enabled: Boolean) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.86f),
             )
         }
+
+        Image(
+            painter = painterResource(R.drawable.screen_lock_home_hero),
+            contentDescription = stringResource(R.string.hero_image_content_description),
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(4f / 3f)
+                .clip(RoundedCornerShape(24.dp)),
+            contentScale = ContentScale.Crop,
+        )
 
         StatusPill(enabled)
     }
@@ -593,6 +612,8 @@ private fun UpdateCard(
 private fun SettingsCard(
     activationDelaySeconds: Int,
     unlockSeconds: Int,
+    unlockRadiusDp: Int,
+    unlockPosition: UnlockTargetPosition,
     dimPercent: Int,
     showHint: Boolean,
     haptics: Boolean,
@@ -601,6 +622,8 @@ private fun SettingsCard(
     shadeProtectionMessage: String?,
     onActivationDelayChanged: (Int) -> Unit,
     onUnlockSecondsChanged: (Int) -> Unit,
+    onUnlockRadiusChanged: (Int) -> Unit,
+    onUnlockPositionChanged: (UnlockTargetPosition) -> Unit,
     onDimPercentChanged: (Int) -> Unit,
     onShowHintChanged: (Boolean) -> Unit,
     onHapticsChanged: (Boolean) -> Unit,
@@ -608,6 +631,8 @@ private fun SettingsCard(
 ) {
     var delay by remember(activationDelaySeconds) { mutableIntStateOf(activationDelaySeconds) }
     var seconds by remember(unlockSeconds) { mutableIntStateOf(unlockSeconds) }
+    var radius by remember(unlockRadiusDp) { mutableIntStateOf(unlockRadiusDp) }
+    var position by remember(unlockPosition) { mutableStateOf(unlockPosition) }
     var dim by remember(dimPercent) { mutableFloatStateOf(dimPercent.toFloat()) }
     var hint by remember(showHint) { mutableStateOf(showHint) }
     var vibration by remember(haptics) { mutableStateOf(haptics) }
@@ -659,6 +684,48 @@ private fun SettingsCard(
             onValueChangeFinished = { onUnlockSecondsChanged(seconds) },
             valueRange = 3f..12f,
             steps = 8,
+        )
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
+
+        SettingLabel(
+            title = stringResource(R.string.unlock_radius_title),
+            value = stringResource(R.string.dp_format, radius),
+        )
+        Slider(
+            value = radius.toFloat(),
+            onValueChange = {
+                radius = ((it / 5f).roundToInt() * 5).coerceIn(40, 120)
+            },
+            onValueChangeFinished = { onUnlockRadiusChanged(radius) },
+            valueRange = 40f..120f,
+            steps = 15,
+        )
+
+        Text(
+            text = stringResource(R.string.unlock_position_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Text(
+            text = stringResource(R.string.unlock_position_desc),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall,
+        )
+        UnlockPositionGrid(
+            position = position,
+            onPositionChanged = {
+                position = it
+                onUnlockPositionChanged(it)
+            },
+        )
+        Text(
+            text = stringResource(
+                R.string.unlock_position_selected_format,
+                unlockPositionLabel(position),
+            ),
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.labelLarge,
         )
 
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
@@ -720,6 +787,89 @@ private fun SettingsCard(
         )
     }
 }
+
+@Composable
+private fun UnlockPositionGrid(
+    position: UnlockTargetPosition,
+    onPositionChanged: (UnlockTargetPosition) -> Unit,
+) {
+    val rows = listOf(
+        listOf(
+            UnlockTargetPosition.TOP_LEFT,
+            UnlockTargetPosition.TOP_CENTER,
+            UnlockTargetPosition.TOP_RIGHT,
+        ),
+        listOf(
+            UnlockTargetPosition.CENTER_LEFT,
+            UnlockTargetPosition.CENTER,
+            UnlockTargetPosition.CENTER_RIGHT,
+        ),
+        listOf(
+            UnlockTargetPosition.BOTTOM_LEFT,
+            UnlockTargetPosition.BOTTOM_CENTER,
+            UnlockTargetPosition.BOTTOM_RIGHT,
+        ),
+    )
+
+    rows.forEach { row ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            row.forEach { option ->
+                val symbol = when (option) {
+                    UnlockTargetPosition.TOP_LEFT -> "↖"
+                    UnlockTargetPosition.TOP_CENTER -> "↑"
+                    UnlockTargetPosition.TOP_RIGHT -> "↗"
+                    UnlockTargetPosition.CENTER_LEFT -> "←"
+                    UnlockTargetPosition.CENTER -> "•"
+                    UnlockTargetPosition.CENTER_RIGHT -> "→"
+                    UnlockTargetPosition.BOTTOM_LEFT -> "↙"
+                    UnlockTargetPosition.BOTTOM_CENTER -> "↓"
+                    UnlockTargetPosition.BOTTOM_RIGHT -> "↘"
+                }
+
+                if (option == position) {
+                    Button(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp),
+                        contentPadding = PaddingValues(0.dp),
+                        onClick = { onPositionChanged(option) },
+                    ) {
+                        Text(symbol, style = MaterialTheme.typography.titleLarge)
+                    }
+                } else {
+                    OutlinedButton(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp),
+                        contentPadding = PaddingValues(0.dp),
+                        onClick = { onPositionChanged(option) },
+                    ) {
+                        Text(symbol, style = MaterialTheme.typography.titleLarge)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun unlockPositionLabel(position: UnlockTargetPosition): String =
+    stringResource(
+        when (position) {
+            UnlockTargetPosition.TOP_LEFT -> R.string.unlock_position_top_left
+            UnlockTargetPosition.TOP_CENTER -> R.string.unlock_position_top_center
+            UnlockTargetPosition.TOP_RIGHT -> R.string.unlock_position_top_right
+            UnlockTargetPosition.CENTER_LEFT -> R.string.unlock_position_center_left
+            UnlockTargetPosition.CENTER -> R.string.unlock_position_center
+            UnlockTargetPosition.CENTER_RIGHT -> R.string.unlock_position_center_right
+            UnlockTargetPosition.BOTTOM_LEFT -> R.string.unlock_position_bottom_left
+            UnlockTargetPosition.BOTTOM_CENTER -> R.string.unlock_position_bottom_center
+            UnlockTargetPosition.BOTTOM_RIGHT -> R.string.unlock_position_bottom_right
+        },
+    )
 
 @Composable
 private fun PrivacyCard() {
