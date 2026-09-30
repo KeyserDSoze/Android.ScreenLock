@@ -4,9 +4,23 @@ import android.content.ComponentName
 import android.content.Context
 import android.provider.Settings
 
+enum class UnlockTargetPosition {
+    TOP_LEFT,
+    TOP_CENTER,
+    TOP_RIGHT,
+    CENTER_LEFT,
+    CENTER,
+    CENTER_RIGHT,
+    BOTTOM_LEFT,
+    BOTTOM_CENTER,
+    BOTTOM_RIGHT,
+}
+
 object LockPreferences {
     private const val PREFS = "screen_lock_preferences"
     private const val KEY_UNLOCK_SECONDS = "unlock_seconds"
+    private const val KEY_UNLOCK_RADIUS_DP = "unlock_radius_dp"
+    private const val KEY_UNLOCK_POSITION = "unlock_position"
     private const val KEY_ACTIVATION_DELAY_SECONDS = "activation_delay_seconds"
     private const val KEY_DIM_PERCENT = "dim_percent"
     private const val KEY_SHOW_HINT = "show_hint"
@@ -21,6 +35,26 @@ object LockPreferences {
 
     fun setUnlockSeconds(context: Context, seconds: Int) {
         prefs(context).edit().putInt(KEY_UNLOCK_SECONDS, seconds.coerceIn(3, 12)).apply()
+    }
+
+    fun unlockRadiusDp(context: Context): Int =
+        prefs(context).getInt(KEY_UNLOCK_RADIUS_DP, 70).coerceIn(40, 120)
+
+    fun setUnlockRadiusDp(context: Context, radiusDp: Int) {
+        prefs(context).edit().putInt(KEY_UNLOCK_RADIUS_DP, radiusDp.coerceIn(40, 120)).apply()
+    }
+
+    fun unlockPosition(context: Context): UnlockTargetPosition {
+        val stored = prefs(context).getString(
+            KEY_UNLOCK_POSITION,
+            UnlockTargetPosition.CENTER.name,
+        )
+        return runCatching { UnlockTargetPosition.valueOf(stored.orEmpty()) }
+            .getOrDefault(UnlockTargetPosition.CENTER)
+    }
+
+    fun setUnlockPosition(context: Context, position: UnlockTargetPosition) {
+        prefs(context).edit().putString(KEY_UNLOCK_POSITION, position.name).apply()
     }
 
     fun activationDelaySeconds(context: Context): Int =
