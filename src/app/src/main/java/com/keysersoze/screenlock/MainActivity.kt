@@ -1,8 +1,12 @@
 package com.keysersoze.screenlock
 
+import android.app.DownloadManager
 import android.app.StatusBarManager
+import android.content.BroadcastReceiver
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
@@ -14,8 +18,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.lifecycleScope
 import com.keysersoze.screenlock.ui.ScreenLockApp
 import com.keysersoze.screenlock.ui.theme.ScreenLockTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -24,10 +30,38 @@ class MainActivity : ComponentActivity() {
     private var tileMessage by mutableStateOf<String?>(null)
     private var pendingTilePrompt = false
 
+    private var immersiveShield by mutableStateOf(false)
+    private var autoUpdates by mutableStateOf(true)
+    private var updateInfo by mutableStateOf<UpdateInfo?>(null)
+    private var updateChecking by mutableStateOf(false)
+    private var updateDownloading by mutableStateOf(false)
+    private var updateMessage by mutableStateOf<String?>(null)
+    private var pendingInstallAfterPermission = false
+    private var downloadReceiverRegistered = false
+
+    private val downloadReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action != DownloadManager.ACTION_DOWNLOAD_COMPLETE) return
+            val completedId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L)
+            if (completedId != UpdateManager.currentDownloadId(this@MainActivity)) return
+
+            updateDownloading = false
+            if (UpdateManager.isComplete(this@MainActivity, completedId)) {
+                updateMessage =
+                    "Aggiornamento scaricato. Android richiederà la conferma prima di installarlo."
+            } else {
+                updateMessage = "Download aggiornamento non riuscito. Puoi riprovare."
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         overlayEnabled = LockPreferences.canDrawOverlays(this)
+        immersiveShield = LockPreferences.immersiveShield(this)
+        autoUpdates = LockPreferences.autoUpdates(this)
 
         setContent {
             ScreenLockTheme {
@@ -39,6 +73,14 @@ class MainActivity : ComponentActivity() {
                     dimPercent = LockPreferences.dimPercent(this),
                     showHint = LockPreferences.showHint(this),
                     haptics = LockPreferences.haptics(this),
+                    immersiveShield = immersiveShield,
+                    autoUpdates = autoUpdates,
+                    currentVersion = BuildConfig.VERSION_NAME,
+                    updateInfo = updateInfo,
+                    updateChecking = updateChecking,
+                    updateDownloading = updateDownloading,
+                    updateReady = UpdateManager.isComplete(this),
+                    updateMessage = updateMessage,
                     tileMessage = tileMessage,
                     onEnableOverlay = {
                         showOverlayHelp = true
@@ -51,12 +93,7 @@ class MainActivity : ComponentActivity() {
                         openOverlaySettings()
                     },
                     onAddQuickTile = ::requestQuickTile,
-                    onTestLock = {
-                        ScreenLockOverlayService.start(
-                            this,
-                            ScreenLockOverlayService.ACTION_LOCK,
-                        )
-                    },
+                    onTestLock = ::startTestLock,
                     onActivationDelayChanged = {
                         LockPreferences.setActivationDelaySeconds(this, it)
                     },
@@ -64,13 +101,52 @@ class MainActivity : ComponentActivity() {
                     onDimPercentChanged = { LockPreferences.setDimPercent(this, it) },
                     onShowHintChanged = { LockPreferences.setShowHint(this, it) },
                     onHapticsChanged = { LockPreferences.setHaptics(this, it) },
+                    onImmersiveShieldChanged = {
+                        immersiveShield = it
+                        LockPreferences.setImmersiveShield(this, it)
+                    },
+                    onAutoUpdatesChanged = {
+                        autoUpdates = it
+                        LockPreferences.setAutoUpdates(this, it)
+                        if (it) checkForUpdates(autoDownload = true)
+                    },
+                    onCheckUpdates = { checkForUpdates(autoDownload = false) },
+                    onDownloadUpdate = {
+                        updateInfo?.let(::downloadUpdate)
+                    },
+                    onInstallUpdate = ::installDownloadedUpdate,
                 )
             }
         }
+
+        if (autoUpdates) checkForUpdates(autoDownload = true)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (!downloadReceiverRegistered) {
+            val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+            if (Build.VERSION.SDK_INT >= 33) {
+                registerReceiver(downloadReceiver, filter, Context.RECEIVER_EXPORTED)
+            } else {
+                @Suppress("DEPRECATION")
+                registerReceiver(downloadReceiver, filter)
+            }
+            downloadReceiverRegistered = true
+        }
+    }
+
+    override fun onStop() {
+        if (downloadReceiverRegistered) {
+            runCatching { unregisterReceiver(downloadReceiver) }
+            downloadReceiverRegistered = false
+        }
+        super.onStop()
     }
 
     override fun onResume() {
         super.onResume()
+
         val wasEnabled = overlayEnabled
         val enabledNow = LockPreferences.canDrawOverlays(this)
         overlayEnabled = enabledNow
@@ -80,6 +156,14 @@ class MainActivity : ComponentActivity() {
                 "Perfetto: il permesso è attivo. Ora aggiungiamo Screen Lock alla tendina."
             pendingTilePrompt = true
         }
+
+        if (pendingInstallAfterPermission && UpdateManager.canInstallPackages(this)) {
+            pendingInstallAfterPermission = false
+            UpdateManager.installDownloaded(this)
+        } else if (UpdateManager.isComplete(this)) {
+            updateMessage =
+                "Aggiornamento scaricato e pronto. Tocca “Installa aggiornamento”."
+        }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -87,6 +171,78 @@ class MainActivity : ComponentActivity() {
         if (hasFocus && pendingTilePrompt) {
             pendingTilePrompt = false
             requestQuickTile()
+        }
+    }
+
+    private fun startTestLock() {
+        if (immersiveShield) {
+            startActivity(
+                TouchShieldActivity.intent(this, TouchShieldActivity.ACTION_LOCK),
+            )
+        } else {
+            ScreenLockOverlayService.start(
+                this,
+                ScreenLockOverlayService.ACTION_LOCK,
+            )
+        }
+    }
+
+    private fun checkForUpdates(autoDownload: Boolean) {
+        if (updateChecking) return
+        updateChecking = true
+        updateMessage = if (autoDownload) null else "Controllo aggiornamenti…"
+
+        lifecycleScope.launch {
+            val result = runCatching { UpdateManager.checkLatest() }
+            updateChecking = false
+
+            result.onSuccess { info ->
+                updateInfo = info
+                if (info == null) {
+                    if (!autoDownload) {
+                        updateMessage = "Hai già l’ultima versione."
+                    }
+                } else if (autoDownload && !UpdateManager.isComplete(this@MainActivity)) {
+                    downloadUpdate(info)
+                } else {
+                    updateMessage = "Nuova versione ${info.version} disponibile."
+                }
+            }.onFailure {
+                updateMessage =
+                    if (autoDownload) null else "Non riesco a controllare GitHub in questo momento."
+            }
+        }
+    }
+
+    private fun downloadUpdate(info: UpdateInfo) {
+        if (updateDownloading || UpdateManager.isComplete(this)) return
+        runCatching {
+            UpdateManager.enqueue(this, info)
+        }.onSuccess {
+            updateDownloading = true
+            updateMessage = "Download di Screen Lock ${info.version} in corso…"
+        }.onFailure {
+            updateDownloading = false
+            updateMessage = "Download non riuscito. Puoi riprovare."
+        }
+    }
+
+    private fun installDownloadedUpdate() {
+        if (!UpdateManager.isComplete(this)) {
+            updateMessage = "L’aggiornamento non è ancora pronto."
+            return
+        }
+
+        if (!UpdateManager.canInstallPackages(this)) {
+            pendingInstallAfterPermission = true
+            updateMessage =
+                "Consenti a Screen Lock di installare aggiornamenti, poi tornerai qui."
+            UpdateManager.openInstallPermission(this)
+            return
+        }
+
+        if (!UpdateManager.installDownloaded(this)) {
+            updateMessage = "Non riesco ad aprire l’installer Android."
         }
     }
 
