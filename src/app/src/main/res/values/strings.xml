@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Screen Lock</string>
+    <string name="accessibility_service_name">Screen Lock touch blocker</string>
+    <string name="accessibility_service_description">Blocks accidental touches over other apps. Screen Lock does not read screen content.</string>
+    <string name="quick_tile_label">Screen Lock</string>
+    <string name="quick_tile_unavailable">Enable Screen Lock accessibility service first</string>
+</resources>
