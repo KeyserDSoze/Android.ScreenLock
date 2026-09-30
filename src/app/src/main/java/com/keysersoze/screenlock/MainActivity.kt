@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
+    private var languageCode by mutableStateOf(AppLocaleManager.SYSTEM)
     private var overlayEnabled by mutableStateOf(false)
     private var showOverlayHelp by mutableStateOf(false)
     private var tileMessage by mutableStateOf<String?>(null)
@@ -53,15 +54,21 @@ class MainActivity : ComponentActivity() {
             updateDownloading = false
             if (UpdateManager.isComplete(this@MainActivity, completedId)) {
                 updateMessage =
-                    "Aggiornamento scaricato. Android richiederà la conferma prima di installarlo."
+                    getString(R.string.msg_update_downloaded)
             } else {
-                updateMessage = "Download aggiornamento non riuscito. Puoi riprovare."
+                updateMessage = getString(R.string.msg_update_download_failed)
             }
         }
     }
 
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLocaleManager.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppLocaleManager.syncFrameworkLocale(this)
+        languageCode = AppLocaleManager.selectedLanguage(this)
         enableEdgeToEdge()
 
         UpdateManager.reconcileInstalledVersion(this)
@@ -99,6 +106,8 @@ class MainActivity : ComponentActivity() {
                     updateReady = UpdateManager.isComplete(this),
                     updateMessage = updateMessage,
                     tileMessage = tileMessage,
+                    selectedLanguage = languageCode,
+                    languageOptions = AppLocaleManager.supportedLanguages,
                     onEnableOverlay = {
                         showOverlayHelp = true
                     },
@@ -143,6 +152,13 @@ class MainActivity : ComponentActivity() {
                         updateInfo?.let(::downloadUpdate)
                     },
                     onInstallUpdate = ::installDownloadedUpdate,
+                    onLanguageChanged = { code ->
+                        if (code != languageCode) {
+                            AppLocaleManager.setLanguage(this, code)
+                            languageCode = code
+                            recreate()
+                        }
+                    },
                 )
             }
         }
@@ -180,7 +196,7 @@ class MainActivity : ComponentActivity() {
 
         if (!wasOverlayEnabled && overlayEnabled) {
             tileMessage =
-                "Perfetto: il permesso è attivo. Ora aggiungiamo Screen Lock alla tendina."
+                getString(R.string.msg_overlay_permission_ready)
             pendingTilePrompt = true
         }
 
@@ -193,12 +209,12 @@ class MainActivity : ComponentActivity() {
             shadeProtectionEnabled = true
             LockPreferences.setShadeProtection(this, true)
             shadeProtectionMessage =
-                "Protezione tendina pronta: durante il lock Android proverà a richiudere subito la tendina."
+                getString(R.string.msg_shade_ready)
         } else if (!accessibilityNow && shadeProtectionEnabled) {
             shadeProtectionEnabled = false
             LockPreferences.setShadeProtection(this, false)
             shadeProtectionMessage =
-                "Protezione tendina disattivata perché il servizio di Accessibilità non è più attivo."
+                getString(R.string.msg_shade_disabled_accessibility)
         }
 
         updateDownloading = UpdateManager.isInProgress(this)
@@ -208,7 +224,7 @@ class MainActivity : ComponentActivity() {
             UpdateManager.installDownloaded(this)
         } else if (UpdateManager.isComplete(this)) {
             updateMessage =
-                "Aggiornamento scaricato e pronto. Tocca “Installa aggiornamento”."
+                getString(R.string.msg_update_ready)
         }
     }
 
@@ -225,7 +241,7 @@ class MainActivity : ComponentActivity() {
             pendingShadeProtectionEnable = false
             shadeProtectionEnabled = false
             LockPreferences.setShadeProtection(this, false)
-            shadeProtectionMessage = "Protezione tendina disattivata."
+            shadeProtectionMessage = getString(R.string.msg_shade_disabled)
             return
         }
 
@@ -236,7 +252,7 @@ class MainActivity : ComponentActivity() {
             shadeProtectionEnabled = true
             LockPreferences.setShadeProtection(this, true)
             shadeProtectionMessage =
-                "Protezione tendina pronta: verrà usata solo mentre Screen Lock è attivo."
+                getString(R.string.msg_shade_ready_active_only)
         } else {
             shadeProtectionEnabled = false
             pendingShadeProtectionEnable = true
@@ -256,7 +272,7 @@ class MainActivity : ComponentActivity() {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }.onFailure {
             shadeProtectionMessage =
-                "Apri Impostazioni → Accessibilità → App scaricate e scegli “Screen Lock · Protezione tendina”."
+                getString(R.string.msg_accessibility_fallback)
         }
     }
 
@@ -270,14 +286,14 @@ class MainActivity : ComponentActivity() {
             )
         }.onFailure {
             shadeProtectionMessage =
-                "Apri Impostazioni → App → Screen Lock per controllare le impostazioni con limitazioni."
+                getString(R.string.msg_app_info_fallback)
         }
     }
 
     private fun checkForUpdates(autoDownload: Boolean) {
         if (updateChecking) return
         updateChecking = true
-        updateMessage = if (autoDownload) null else "Controllo aggiornamenti…"
+        updateMessage = if (autoDownload) null else getString(R.string.msg_checking_updates)
 
         lifecycleScope.launch {
             val result = runCatching { UpdateManager.checkLatest() }
@@ -287,7 +303,7 @@ class MainActivity : ComponentActivity() {
                 updateInfo = info
                 if (info == null) {
                     if (!autoDownload) {
-                        updateMessage = "Hai già l’ultima versione."
+                        updateMessage = getString(R.string.msg_latest_version)
                     }
                 } else if (
                     autoDownload &&
@@ -297,13 +313,13 @@ class MainActivity : ComponentActivity() {
                     downloadUpdate(info)
                 } else if (UpdateManager.isInProgress(this@MainActivity)) {
                     updateDownloading = true
-                    updateMessage = "Download di Screen Lock ${info.version} in corso…"
+                    updateMessage = getString(R.string.msg_download_version_progress, info.version)
                 } else {
-                    updateMessage = "Nuova versione ${info.version} disponibile."
+                    updateMessage = getString(R.string.msg_new_version_available, info.version)
                 }
             }.onFailure {
                 updateMessage =
-                    if (autoDownload) null else "Non riesco a controllare GitHub in questo momento."
+                    if (autoDownload) null else getString(R.string.msg_github_check_failed)
             }
         }
     }
@@ -319,29 +335,29 @@ class MainActivity : ComponentActivity() {
             UpdateManager.enqueue(this, info)
         }.onSuccess {
             updateDownloading = true
-            updateMessage = "Download di Screen Lock ${info.version} in corso…"
+            updateMessage = getString(R.string.msg_download_version_progress, info.version)
         }.onFailure {
             updateDownloading = false
-            updateMessage = "Download non riuscito. Puoi riprovare."
+            updateMessage = getString(R.string.msg_download_failed_retry)
         }
     }
 
     private fun installDownloadedUpdate() {
         if (!UpdateManager.isComplete(this)) {
-            updateMessage = "L’aggiornamento non è ancora pronto."
+            updateMessage = getString(R.string.msg_update_not_ready)
             return
         }
 
         if (!UpdateManager.canInstallPackages(this)) {
             pendingInstallAfterPermission = true
             updateMessage =
-                "Consenti a Screen Lock di installare aggiornamenti, poi tornerai qui."
+                getString(R.string.msg_allow_install_updates)
             UpdateManager.openInstallPermission(this)
             return
         }
 
         if (!UpdateManager.installDownloaded(this)) {
-            updateMessage = "Non riesco ad aprire l’installer Android."
+            updateMessage = getString(R.string.msg_installer_failed)
         }
     }
 
@@ -356,14 +372,14 @@ class MainActivity : ComponentActivity() {
             .recoverCatching { startActivity(fallback) }
             .onFailure {
                 tileMessage =
-                    "Apri Impostazioni e cerca “Mostra sopra altre app”, poi abilita Screen Lock."
+                    getString(R.string.msg_overlay_settings_fallback)
             }
     }
 
     private fun requestQuickTile() {
         if (Build.VERSION.SDK_INT < 33) {
             tileMessage =
-                "Apri la tendina, tocca Modifica e trascina “Screen Lock” tra i pulsanti attivi."
+                getString(R.string.msg_tile_manual_add)
             return
         }
 
@@ -376,15 +392,15 @@ class MainActivity : ComponentActivity() {
         ) { result ->
             tileMessage = when (result) {
                 StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ADDED ->
-                    "Fatto: Screen Lock è nella tendina dei Comandi rapidi."
+                    getString(R.string.msg_tile_added)
                 StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ALREADY_ADDED ->
-                    "Screen Lock è già nella tendina dei Comandi rapidi."
+                    getString(R.string.msg_tile_already_added)
                 StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_NOT_ADDED ->
-                    "Non è stato aggiunto. Puoi riprovare dal pulsante qui sotto."
+                    getString(R.string.msg_tile_not_added)
                 StatusBarManager.TILE_ADD_REQUEST_ERROR_APP_NOT_IN_FOREGROUND ->
-                    "Riprova: Android richiede che Screen Lock sia visibile in primo piano."
+                    getString(R.string.msg_tile_foreground)
                 else ->
-                    "Se non compare il popup, apri la tendina → Modifica e aggiungi Screen Lock manualmente."
+                    getString(R.string.msg_tile_popup_fallback)
             }
         }
     }
