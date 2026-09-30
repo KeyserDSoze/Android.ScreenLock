@@ -26,6 +26,12 @@ Screen Lock blocca i normali tocchi consegnati alle app sotto l'overlay. Il lock
 - Il foreground service esiste solo mentre il blocco overlay è in attivazione o attivo.
 - Preferenze solo locali sul dispositivo.
 
+## Branding
+
+Le risorse visuali generate per Screen Lock sono conservate nel repository. L'app usa una variante ottimizzata del nuovo lucchetto mint come adaptive launcher icon e come simbolo nella home, mentre l'illustrazione della videochiamata viene mostrata come hero nella schermata principale. La tile dei Comandi rapidi resta un'icona vettoriale monocromatica per rispettare il rendering di System UI.
+
+Gli asset Android ottimizzati si trovano in `src/app/src/main/res/drawable-nodpi/`; un concept alternativo è conservato in `assets/branding/`.
+
 ## Sviluppo
 
 Il progetto Android vive in [`src/`](src/) e usa lo stack stabile corrente:
