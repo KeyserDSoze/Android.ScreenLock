@@ -64,15 +64,33 @@ jobs:
         with:
           gradle-version: '9.6.0'
 
-      - name: Restore stable debug signing key
-        uses: actions/cache@v4
-        with:
-          path: ~/.android/debug.keystore
-          key: screen-lock-debug-keystore-v1
+      - name: Restore stable signing key
+        shell: bash
+        env:
+          SCREENLOCK_KEYSTORE_B64: ${{ secrets.SCREENLOCK_KEYSTORE_B64 }}
+        run: |
+          if [[ -z "$SCREENLOCK_KEYSTORE_B64" ]]; then
+            echo "Missing repository secret SCREENLOCK_KEYSTORE_B64" >&2
+            exit 1
+          fi
+          printf '%s' "$SCREENLOCK_KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/screenlock-release.jks"
 
       - name: Test and build installable APK
         working-directory: src
-        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
+        env:
+          SCREENLOCK_KEYSTORE_PATH: ${{ runner.temp }}/screenlock-release.jks
+          SCREENLOCK_KEYSTORE_PASSWORD: ${{ secrets.SCREENLOCK_KEYSTORE_PASSWORD }}
+        run: |
+          if [[ -z "$SCREENLOCK_KEYSTORE_PASSWORD" ]]; then
+            echo "Missing repository secret SCREENLOCK_KEYSTORE_PASSWORD" >&2
+            exit 1
+          fi
+          gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
+
+      - name: Verify APK signing certificate
+        shell: bash
+        run: |
+          "$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --print-certs             src/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Prepare release files
         id: artifact
@@ -83,6 +101,7 @@ jobs:
           APK="screen-lock-v${VERSION}.apk"
           cp src/app/build/outputs/apk/debug/app-debug.apk "$APK"
           sha256sum "$APK" > "$APK.sha256"
+          "$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --print-certs "$APK" > "$APK.cert.txt"
           echo "apk=$APK" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
@@ -93,7 +112,7 @@ jobs:
           APK: ${{ steps.artifact.outputs.apk }}
         run: |
           gh release create "$TAG" \
-            "$APK" "$APK.sha256" \
+            "$APK" "$APK.sha256" "$APK.cert.txt" \
             --target "$GITHUB_SHA" \
             --title "Screen Lock $VERSION" \
             --generate-notes
