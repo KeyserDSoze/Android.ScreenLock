@@ -25,6 +25,9 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
+    private val githubDistributionFeaturesEnabled: Boolean
+        get() = BuildConfig.ENABLE_GITHUB_DISTRIBUTION_FEATURES
+
     private var languageCode by mutableStateOf(AppLocaleManager.SYSTEM)
     private var overlayEnabled by mutableStateOf(false)
     private var showOverlayHelp by mutableStateOf(false)
@@ -71,24 +74,34 @@ class MainActivity : ComponentActivity() {
         languageCode = AppLocaleManager.selectedLanguage(this)
         enableEdgeToEdge()
 
-        UpdateManager.reconcileInstalledVersion(this)
         overlayEnabled = LockPreferences.canDrawOverlays(this)
-        shadeAccessibilityEnabled =
-            LockPreferences.isShadeProtectionAccessibilityEnabled(this)
-        shadeProtectionEnabled =
-            LockPreferences.shadeProtection(this) && shadeAccessibilityEnabled
-        if (!shadeAccessibilityEnabled) {
-            LockPreferences.setShadeProtection(this, false)
-        }
 
-        autoUpdates = LockPreferences.autoUpdates(this)
-        updateDownloading = UpdateManager.isInProgress(this)
+        if (githubDistributionFeaturesEnabled) {
+            UpdateManager.reconcileInstalledVersion(this)
+            shadeAccessibilityEnabled =
+                LockPreferences.isShadeProtectionAccessibilityEnabled(this)
+            shadeProtectionEnabled =
+                LockPreferences.shadeProtection(this) && shadeAccessibilityEnabled
+            if (!shadeAccessibilityEnabled) {
+                LockPreferences.setShadeProtection(this, false)
+            }
+
+            autoUpdates = LockPreferences.autoUpdates(this)
+            updateDownloading = UpdateManager.isInProgress(this)
+        } else {
+            shadeAccessibilityEnabled = false
+            shadeProtectionEnabled = false
+            autoUpdates = false
+            updateDownloading = false
+        }
 
         setContent {
             ScreenLockTheme {
                 ScreenLockApp(
                     overlayEnabled = overlayEnabled,
                     showOverlayHelp = showOverlayHelp,
+                    showUpdater = githubDistributionFeaturesEnabled,
+                    showShadeProtection = githubDistributionFeaturesEnabled,
                     showShadeProtectionHelp = showShadeProtectionHelp,
                     activationDelaySeconds = LockPreferences.activationDelaySeconds(this),
                     unlockSeconds = LockPreferences.unlockSeconds(this),
@@ -167,12 +180,14 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        if (autoUpdates) checkForUpdates(autoDownload = true)
+        if (githubDistributionFeaturesEnabled && autoUpdates) {
+            checkForUpdates(autoDownload = true)
+        }
     }
 
     override fun onStart() {
         super.onStart()
-        if (!downloadReceiverRegistered) {
+        if (githubDistributionFeaturesEnabled && !downloadReceiverRegistered) {
             val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
             if (Build.VERSION.SDK_INT >= 33) {
                 registerReceiver(downloadReceiver, filter, Context.RECEIVER_EXPORTED)
@@ -204,31 +219,33 @@ class MainActivity : ComponentActivity() {
             pendingTilePrompt = true
         }
 
-        val accessibilityNow =
-            LockPreferences.isShadeProtectionAccessibilityEnabled(this)
-        shadeAccessibilityEnabled = accessibilityNow
+        if (githubDistributionFeaturesEnabled) {
+            val accessibilityNow =
+                LockPreferences.isShadeProtectionAccessibilityEnabled(this)
+            shadeAccessibilityEnabled = accessibilityNow
 
-        if (pendingShadeProtectionEnable && accessibilityNow) {
-            pendingShadeProtectionEnable = false
-            shadeProtectionEnabled = true
-            LockPreferences.setShadeProtection(this, true)
-            shadeProtectionMessage =
-                getString(R.string.msg_shade_ready)
-        } else if (!accessibilityNow && shadeProtectionEnabled) {
-            shadeProtectionEnabled = false
-            LockPreferences.setShadeProtection(this, false)
-            shadeProtectionMessage =
-                getString(R.string.msg_shade_disabled_accessibility)
-        }
+            if (pendingShadeProtectionEnable && accessibilityNow) {
+                pendingShadeProtectionEnable = false
+                shadeProtectionEnabled = true
+                LockPreferences.setShadeProtection(this, true)
+                shadeProtectionMessage =
+                    getString(R.string.msg_shade_ready)
+            } else if (!accessibilityNow && shadeProtectionEnabled) {
+                shadeProtectionEnabled = false
+                LockPreferences.setShadeProtection(this, false)
+                shadeProtectionMessage =
+                    getString(R.string.msg_shade_disabled_accessibility)
+            }
 
-        updateDownloading = UpdateManager.isInProgress(this)
+            updateDownloading = UpdateManager.isInProgress(this)
 
-        if (pendingInstallAfterPermission && UpdateManager.canInstallPackages(this)) {
-            pendingInstallAfterPermission = false
-            UpdateManager.installDownloaded(this)
-        } else if (UpdateManager.isComplete(this)) {
-            updateMessage =
-                getString(R.string.msg_update_ready)
+            if (pendingInstallAfterPermission && UpdateManager.canInstallPackages(this)) {
+                pendingInstallAfterPermission = false
+                UpdateManager.installDownloaded(this)
+            } else if (UpdateManager.isComplete(this)) {
+                updateMessage =
+                    getString(R.string.msg_update_ready)
+            }
         }
     }
 
@@ -241,6 +258,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun setShadeProtection(enabled: Boolean) {
+        if (!githubDistributionFeaturesEnabled) return
+
         if (!enabled) {
             pendingShadeProtectionEnable = false
             shadeProtectionEnabled = false
@@ -295,7 +314,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun checkForUpdates(autoDownload: Boolean) {
-        if (updateChecking) return
+        if (!githubDistributionFeaturesEnabled || updateChecking) return
         updateChecking = true
         updateMessage = if (autoDownload) null else getString(R.string.msg_checking_updates)
 
@@ -329,6 +348,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun downloadUpdate(info: UpdateInfo) {
+        if (!githubDistributionFeaturesEnabled) return
+
         if (
             updateDownloading ||
             UpdateManager.isInProgress(this) ||
@@ -347,6 +368,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun installDownloadedUpdate() {
+        if (!githubDistributionFeaturesEnabled) return
+
         if (!UpdateManager.isComplete(this)) {
             updateMessage = getString(R.string.msg_update_not_ready)
             return
