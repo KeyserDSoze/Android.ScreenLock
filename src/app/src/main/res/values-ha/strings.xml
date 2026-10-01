@@ -32,7 +32,7 @@
     <string name="shade_dialog_intro">Wannan kariya ta zaɓi ce. Yayin da Screen Lock ke aiki, sabis na Accessibility da aka iyakance ga System UI yana roƙon Android ya rufe allon sanarwa da zarar an buɗe shi.</string>
     <string name="shade_dialog_privacy">Sabis ɗin baya karanta abin da ke kan allo kuma baya nazarin Telegram. Android yana nuna shi a Accessibility saboda aikin rufe panel yana nan.</string>
     <string name="shade_dialog_steps">A saitunan Android, nemo “Screen Lock · Kariyar allon sanarwa”, buɗe ka kunna maɓallin, sannan ka koma nan.</string>
-    <string name="shade_dialog_restricted">Idan zaɓin ya kashe kuma Android ya nuna “Restricted setting”, buɗe App info ka nemo izinin restricted settings. Wasu nau'ikan Android na iya rashin wannan zaɓin.</string>
+    <string name="shade_dialog_restricted">Idan zaɓin ya kashe kuma Android ya nuna “Restricted setting”, buɗe App info ka nemo izinin restricted settings. Wasu nau’ikan Android na iya rashin wannan zaɓin.</string>
     <string name="open_accessibility">Buɗe Accessibility</string>
     <string name="app_info">App info</string>
     <string name="updates_title">Sabuntawa</string>
@@ -64,9 +64,9 @@
     <string name="haptics_title">Amsar girgiza</string>
     <string name="haptics_desc">Ƙaramin girgiza lokacin da buɗewa ya fara da kuma lokacin da ya ƙare.</string>
     <string name="privacy_title">Sirri tun daga ƙira</string>
-    <string name="privacy_body1">Babu asusu kuma babu nazarin abin da ke kan allo. Intanet ana amfani da shi ne kawai don duba da sauke official GitHub releases. Overlay na cikin na'ura yana kama taɓawa ba tare da karanta allo ba.</string>
+    <string name="privacy_body1">Babu asusu kuma babu nazarin abin da ke kan allo. Intanet ana amfani da shi ne kawai don duba da sauke official GitHub releases. Overlay na cikin na’ura yana kama taɓawa ba tare da karanta allo ba.</string>
     <string name="privacy_body2">Kulle na yau da kullum yana ƙasa da mahimman tagogin tsarin. Kariyar ci gaba na iya roƙon Android ya rufe sanarwa da Quick Settings, amma power, emergency UI da sauran wuraren tsaro suna ƙarƙashin ikon Android.</string>
-    <string name="footer">Screen Lock · mai sauƙi, na cikin na'ura, babu asusu</string>
+    <string name="footer">Screen Lock · mai sauƙi, na cikin na’ura, babu asusu</string>
     <string name="language_title">Harshe</string>
     <string name="language_desc">Yi amfani da harshen tsarin kai tsaye ko zaɓi harshe na musamman don Screen Lock.</string>
     <string name="language_system">Na tsarin</string>
