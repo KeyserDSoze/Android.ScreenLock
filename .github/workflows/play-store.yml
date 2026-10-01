@@ -1,0 +1,76 @@
+name: Publish to Google Play
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "GitHub release tag to publish, for example v0.0.16"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: google-play-publish
+  cancel-in-progress: false
+
+jobs:
+  publish-internal:
+    if: ${{ vars.GOOGLE_PLAY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    environment: google-play
+
+    steps:
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        env:
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          TAG="${EVENT_TAG:-$INPUT_TAG}"
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Expected a release tag like v0.0.16, got: $TAG" >&2
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Download signed App Bundle from GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          mkdir -p dist
+          gh release download "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "screen-lock-*.aab" \
+            --pattern "screen-lock-*.aab.sha256" \
+            --dir dist
+
+      - name: Verify App Bundle checksum
+        working-directory: dist
+        run: sha256sum --check screen-lock-*.aab.sha256
+
+      - name: Prepare Play release notes
+        shell: bash
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          mkdir -p distribution/whatsnew
+          printf 'Screen Lock %s: improvements, fixes and updated localization.\n' "$VERSION" > distribution/whatsnew/whatsnew-en-US
+          printf 'Screen Lock %s: miglioramenti, correzioni e localizzazione aggiornata.\n' "$VERSION" > distribution/whatsnew/whatsnew-it-IT
+
+      - name: Upload to Google Play Internal testing
+        uses: r0adkll/upload-google-play@v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.keysersoze.screenlock
+          releaseFiles: dist/screen-lock-v${{ steps.release.outputs.version }}.aab
+          tracks: internal
+          status: completed
+          whatsNewDirectory: distribution/whatsnew
