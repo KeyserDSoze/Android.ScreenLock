@@ -16,3 +16,6 @@ keystore.properties
 # OS
 .DS_Store
 Thumbs.db
+
+# google-github-actions/auth temporary credentials
+gha-creds-*.json
