@@ -91,6 +91,7 @@ class MainActivity : ComponentActivity() {
         } else {
             shadeAccessibilityEnabled = false
             shadeProtectionEnabled = false
+            LockPreferences.setShadeProtection(this, false)
             autoUpdates = false
             updateDownloading = false
         }
