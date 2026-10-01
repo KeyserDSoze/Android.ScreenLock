@@ -39,6 +39,9 @@ jobs:
     environment: google-play-promote
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
       - name: Validate requested promotion
         id: version
         shell: bash
