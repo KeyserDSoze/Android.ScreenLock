@@ -31,10 +31,11 @@ object LockPreferences {
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-    fun unlockSeconds(context: Context): Int = prefs(context).getInt(KEY_UNLOCK_SECONDS, 6)
+    fun unlockSeconds(context: Context): Int =
+        prefs(context).getInt(KEY_UNLOCK_SECONDS, 6).coerceIn(2, 12)
 
     fun setUnlockSeconds(context: Context, seconds: Int) {
-        prefs(context).edit().putInt(KEY_UNLOCK_SECONDS, seconds.coerceIn(3, 12)).apply()
+        prefs(context).edit().putInt(KEY_UNLOCK_SECONDS, seconds.coerceIn(2, 12)).apply()
     }
 
     fun unlockRadiusDp(context: Context): Int =
