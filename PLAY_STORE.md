@@ -35,24 +35,61 @@ The Play Store AAB is intentionally stricter than the GitHub APK:
 
 This avoids requesting restricted capabilities that are not necessary for the Play-distributed core function.
 
-## One-time Play Console setup
+## Account and one-time Play Console setup
 
-1. Register or open the Google Play developer account and use **Alessandro Rapiti** as the public developer display name if that is the desired store identity.
-2. Create the app in Play Console with package `com.keysersoze.screenlock`.
-3. Configure Play App Signing using the existing Screen Lock signing key so Play and GitHub builds stay compatible.
-4. Complete the required Play Console declarations and app-content forms.
-5. Add the privacy-policy URL. With this public repository it can point to:
-   `https://github.com/KeyserDSoze/Android.ScreenLock/blob/main/PRIVACY.md`
-6. Create an **Internal testing** track and perform the first Play Console bundle setup/upload if required by the account/API state.
-7. Enable the **Google Play Android Developer API** in the Google Cloud project used for publishing.
-8. Create a service account and grant it access to Screen Lock in Play Console with permission to release apps to testing tracks.
-9. In GitHub repository settings, add the secret:
-   - `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` = full JSON service-account key.
-10. Add the repository variable:
-   - `GOOGLE_PLAY_ENABLED` = `true`
-11. Optionally configure the GitHub Environment named `google-play` with protection/approval rules.
+Current Google Play requirements to plan for:
 
-Until `GOOGLE_PLAY_ENABLED=true`, the automatic Play publishing job is intentionally skipped.
+- Google Play developer registration has a **one-time US$25 fee**.
+- The account owner must be at least 18 and complete developer identity verification.
+- For a **new personal account**, Play also requires verification with a real non-rooted Android 10+ device through the Play Console mobile app.
+- New personal accounts created after 13 November 2023 must complete a **closed test with at least 12 opted-in testers continuously for 14 days** before requesting production access.
+- An organization account is intended for a company/business/organization and requires the organization-verification information requested by Google, including a D-U-N-S number where applicable.
+
+### Recommended setup order
+
+1. Register/open the Google Play developer account.
+2. Use **Alessandro Rapiti** as the public developer display name if that is the identity you want shown on Google Play.
+3. Complete identity verification and, for a new personal account, Android-device verification.
+4. Create the app:
+   - name: **Screen Lock**
+   - package: `com.keysersoze.screenlock`
+   - app, not game
+   - free
+   - default language: Italian or English, according to the desired primary listing.
+5. Because this package has already been distributed outside Google Play, expect Android developer verification to ask you to prove ownership of the existing signing key.
+6. In that ownership flow, copy the exact `adi-registration.properties` snippet supplied by Play Console into the GitHub repository secret:
+   - `ANDROID_DEVELOPER_REGISTRATION_SNIPPET`
+7. Run the GitHub Actions workflow **Build package ownership APK**.
+8. Download its private workflow artifact `screen-lock-package-ownership` and upload `screen-lock-package-ownership.apk` to the Play ownership-verification flow.
+9. Configure **Play App Signing** so the Play-distributed app remains compatible with the already distributed GitHub APKs:
+   - provide Google Play a copy of the existing Screen Lock app-signing key using the Play Console guided PEPK flow;
+   - do **not** switch the app-signing identity to an unrelated key if you want Play installations to update existing GitHub installations.
+10. Complete the Play Console app-content forms using `PLAY_CONSOLE_ANSWERS.md`.
+11. Privacy-policy URL:
+    - immediately usable: `https://github.com/KeyserDSoze/Android.ScreenLock/blob/main/PRIVACY.md`
+    - preferred after enabling GitHub Pages from `main/docs`: `https://keyserdsoze.github.io/Android.ScreenLock/privacy.html`
+12. Create an **Internal testing** release. For the first-ever Play release, manually upload the current Play-safe AAB from GitHub Releases if Play/API initialization requires it.
+13. Enable **Google Play Android Developer API** in a Google Cloud project.
+14. Create a service account and grant it access to Screen Lock in **Play Console → Users and permissions** with release-management permissions for the required tracks.
+15. In GitHub repository settings add:
+    - secret `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` = full service-account JSON key;
+    - variable `GOOGLE_PLAY_ENABLED` = `true`;
+    - optional variable `GOOGLE_PLAY_AUTO_TRACKS` = `internal` initially.
+16. Configure GitHub environments:
+    - `google-play` for automatic/internal publishing;
+    - `google-play-promote` for Closed/Production promotion. Add required reviewers here if you want a human approval gate.
+17. Run **Sync Google Play listing** once to push the Italian and English listing text stored in `play/listings/`.
+
+### Personal-account closed test
+
+If Google requires the 12-tester/14-day closed test:
+
+1. Create or use the standard closed testing track (`alpha` via the API).
+2. Either:
+   - set `GOOGLE_PLAY_AUTO_TRACKS=internal,alpha` so new releases are sent to both tracks; or
+   - use **Promote Google Play release** to move the tested Internal version to `alpha`.
+3. Invite at least 12 testers and make sure at least 12 remain opted in continuously for 14 days.
+4. After Google marks the requirement complete, request production access in Play Console.
 
 ## Automated release flow
 
@@ -73,7 +110,7 @@ A normal Screen Lock release now does this:
 
 `.github/workflows/play-store.yml` remains available as a manual retry/backfill workflow for an existing tag.
 
-Production publishing is deliberately not automatic. Promote from Internal testing only after device testing and Play Console checks.
+New releases can be uploaded automatically to testing tracks. Promotion of an already uploaded exact version is handled by the manual **Promote Google Play release** workflow, which can target the closed `alpha` track or `production` without rebuilding the AAB. Keep a protected GitHub environment/reviewer on production promotion until the process is well established.
 
 ## GitHub secrets already used
 
@@ -109,9 +146,7 @@ Funzioni principali:
 - bersaglio di sblocco configurabile per dimensione e posizione;
 - oscuramento opzionale;
 - feedback aptico;
-- protezione opzionale della tendina notifiche;
-- supporto multilingua;
-- aggiornamenti ufficiali tramite GitHub.
+- supporto multilingua.
 
 Screen Lock non richiede un account, non include pubblicità o analytics e non legge il contenuto delle altre app.
 
@@ -138,8 +173,6 @@ Main features:
 - configurable unlock-target size and position;
 - optional dimming;
 - haptic feedback;
-- optional notification-shade protection;
-- multilingual interface;
-- official updates through GitHub.
+- multilingual interface.
 
 Screen Lock requires no account, includes no advertising or analytics, and does not read the content of other apps.
