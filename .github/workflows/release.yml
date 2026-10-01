@@ -96,6 +96,30 @@ jobs:
           "$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --print-certs src/app/build/outputs/apk/debug/app-debug.apk
           jarsigner -verify -verbose -certs src/app/build/outputs/bundle/release/app-release.aab >/dev/null
 
+      - name: Verify Play-safe manifest
+        shell: bash
+        run: |
+          MANIFEST="$(find src/app/build/intermediates -path '*/release/*' -name AndroidManifest.xml -type f | grep -E '/merged_manifest|/merged_manifests|/packaged_manifests' | head -n 1)"
+          if [[ -z "$MANIFEST" || ! -f "$MANIFEST" ]]; then
+            echo "Could not locate merged release AndroidManifest.xml" >&2
+            find src/app/build/intermediates -name AndroidManifest.xml -type f | sort
+            exit 1
+          fi
+          echo "Checking Play manifest: $MANIFEST"
+          if grep -q 'android.permission.REQUEST_INSTALL_PACKAGES' "$MANIFEST"; then
+            echo "Play build must not request REQUEST_INSTALL_PACKAGES" >&2
+            exit 1
+          fi
+          if grep -q 'android.permission.INTERNET' "$MANIFEST"; then
+            echo "Play build must not request INTERNET" >&2
+            exit 1
+          fi
+          if grep -q 'ShadeProtectionAccessibilityService' "$MANIFEST"; then
+            echo "Play build must not include ShadeProtectionAccessibilityService" >&2
+            exit 1
+          fi
+          echo "Play manifest policy surface OK"
+
       - name: Prepare release files
         id: artifact
         shell: bash
