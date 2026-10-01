@@ -17,6 +17,9 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
 
     steps:
       - name: Checkout
@@ -132,3 +135,46 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "Screen Lock $VERSION" \
             --generate-notes
+
+  publish-play-internal:
+    needs: release
+    if: ${{ vars.GOOGLE_PLAY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    environment: google-play
+
+    steps:
+      - name: Download signed App Bundle from GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release.outputs.tag }}
+        run: |
+          mkdir -p dist
+          gh release download "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "screen-lock-*.aab" \
+            --pattern "screen-lock-*.aab.sha256" \
+            --dir dist
+
+      - name: Verify App Bundle checksum
+        working-directory: dist
+        run: sha256sum --check screen-lock-*.aab.sha256
+
+      - name: Prepare Play release notes
+        shell: bash
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          mkdir -p distribution/whatsnew
+          printf 'Screen Lock %s: improvements, fixes and updated localization.\n' "$VERSION" > distribution/whatsnew/whatsnew-en-US
+          printf 'Screen Lock %s: miglioramenti, correzioni e localizzazione aggiornata.\n' "$VERSION" > distribution/whatsnew/whatsnew-it-IT
+
+      - name: Upload to Google Play Internal testing
+        uses: r0adkll/upload-google-play@v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.keysersoze.screenlock
+          releaseFiles: dist/screen-lock-v${{ needs.release.outputs.version }}.aab
+          tracks: internal
+          status: completed
+          whatsNewDirectory: distribution/whatsnew
