@@ -44,6 +44,21 @@ Lingue incluse (40): English, Italiano, Español, Français, Deutsch, Português
 
 La localizzazione copre UI principale, onboarding, updater, notifiche del foreground service, testo di sblocco, tile dei Comandi rapidi e descrizioni del servizio opzionale di Accessibilità.
 
+## Google Play
+
+La pipeline genera due distribuzioni con lo stesso package e la stessa identità di firma:
+
+- **APK GitHub**: include updater GitHub e protezione tendina opzionale.
+- **AAB Google Play**: variante Play-safe senza auto-updater, `INTERNET`, `REQUEST_INSTALL_PACKAGES` o AccessibilityService; mantiene il lock overlay, tile, foreground service, personalizzazione e localizzazioni.
+
+Documentazione di pubblicazione:
+
+- [PLAY_STORE.md](PLAY_STORE.md) — setup una tantum, firma Play e pipeline.
+- [PLAY_CONSOLE_ANSWERS.md](PLAY_CONSOLE_ANSWERS.md) — risposte preparate per Data safety, App access, foreground service, listing e reviewer.
+- [PRIVACY.md](PRIVACY.md) — privacy policy pubblica.
+
+La pubblicazione automatica è intenzionalmente limitata al track **Internal testing** e si attiva soltanto dopo aver configurato il Play Console e la variabile GitHub `GOOGLE_PLAY_ENABLED=true`.
+
 ## Sviluppo
 
 Il progetto Android vive in [`src/`](src/) e usa lo stack stabile corrente:
