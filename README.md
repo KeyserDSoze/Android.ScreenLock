@@ -40,7 +40,7 @@ Launcher, home, tile e icona di notifica sono ora tutti vettoriali; nessun asset
 
 Screen Lock segue per impostazione predefinita la lingua del sistema. Dalla schermata principale è possibile scegliere manualmente una lingua diversa; la preferenza resta salvata e, su Android 13+, viene sincronizzata anche con le lingue per-app del sistema.
 
-Lingue incluse: English, Italiano, Español, Français, Deutsch, Português, Русский, العربية, हिन्दी, 简体中文, 日本語, 한국어, Bahasa Indonesia, Türkçe, Tiếng Việt, বাংলা, اردو, فارسی, Polski e Nederlands. Se la lingua di sistema non è tra quelle supportate, il fallback è l'inglese.
+Lingue incluse (40): English, Italiano, Español, Français, Deutsch, Português, Русский, العربية, हिन्दी, 简体中文, 日本語, 한국어, Bahasa Indonesia, Türkçe, Tiếng Việt, বাংলা, اردو, فارسی, Polski, Nederlands, ไทย, Bahasa Melayu, Kiswahili, தமிழ், తెలుగు, मराठी, ਪੰਜਾਬੀ, ગુજરાતી, ಕನ್ನಡ, മലയാളം, မြန်မာ, नेपाली, Українська, עברית, Ελληνικά, Română, Čeština, Magyar, Svenska e Hausa. Se la lingua di sistema non è tra quelle supportate, il fallback è l'inglese.
 
 La localizzazione copre UI principale, onboarding, updater, notifiche del foreground service, testo di sblocco, tile dei Comandi rapidi e descrizioni del servizio opzionale di Accessibilità.
 
