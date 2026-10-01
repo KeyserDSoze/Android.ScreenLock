@@ -199,6 +199,6 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.keysersoze.screenlock
           releaseFiles: dist/screen-lock-v${{ needs.release.outputs.version }}.aab
-          tracks: internal
+          tracks: ${{ vars.GOOGLE_PLAY_AUTO_TRACKS || 'internal' }}
           status: completed
           whatsNewDirectory: distribution/whatsnew
