@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -43,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -219,38 +221,280 @@ fun ScreenLockApp(
 @Composable
 private fun Hero(enabled: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-        Box(
-            modifier = Modifier
-                .size(74.dp)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), CircleShape),
-            contentAlignment = Alignment.Center,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            LockGlyph(
-                modifier = Modifier.size(40.dp),
-                color = MaterialTheme.colorScheme.primary,
-            )
+            BrandMark(modifier = Modifier.size(82.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-1.2f).sp,
+                )
+                Text(
+                    text = stringResource(R.string.hero_tagline),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-1.2f).sp,
-            )
-            Text(
-                text = stringResource(R.string.hero_tagline),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = stringResource(R.string.hero_description),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.86f),
-            )
-        }
+        BrandHeroArtwork()
+
+        Text(
+            text = stringResource(R.string.hero_description),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.88f),
+        )
 
         StatusPill(enabled)
+    }
+}
+
+@Composable
+private fun BrandMark(modifier: Modifier = Modifier) {
+    val primary = MaterialTheme.colorScheme.primary
+    val secondary = MaterialTheme.colorScheme.secondary
+    val surface = MaterialTheme.colorScheme.surface
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
+
+    Box(
+        modifier = modifier
+            .background(
+                Brush.radialGradient(
+                    listOf(
+                        primary.copy(alpha = 0.22f),
+                        secondary.copy(alpha = 0.09f),
+                        Color.Transparent,
+                    ),
+                ),
+                CircleShape,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.fillMaxSize()) {
+            val stroke = size.minDimension * 0.045f
+            drawCircle(
+                color = primary.copy(alpha = 0.30f),
+                radius = size.minDimension * 0.43f,
+                style = Stroke(width = stroke),
+            )
+            drawCircle(
+                color = secondary.copy(alpha = 0.38f),
+                radius = size.minDimension * 0.34f,
+                style = Stroke(width = stroke * 0.72f),
+            )
+            drawCircle(
+                color = surface,
+                radius = size.minDimension * 0.28f,
+            )
+
+            val lockWidth = size.width * 0.34f
+            val lockLeft = size.width / 2f - lockWidth / 2f
+            val bodyTop = size.height * 0.45f
+            drawArc(
+                color = primary,
+                startAngle = 180f,
+                sweepAngle = 180f,
+                useCenter = false,
+                topLeft = Offset(size.width * 0.38f, size.height * 0.25f),
+                size = Size(size.width * 0.24f, size.height * 0.29f),
+                style = Stroke(width = stroke * 1.18f, cap = StrokeCap.Round),
+            )
+            drawRoundRect(
+                color = primary,
+                topLeft = Offset(lockLeft, bodyTop),
+                size = Size(lockWidth, size.height * 0.27f),
+                cornerRadius = CornerRadius(size.width * 0.055f),
+            )
+            drawCircle(
+                color = onPrimary,
+                radius = size.minDimension * 0.035f,
+                center = Offset(size.width / 2f, size.height * 0.56f),
+            )
+            drawRoundRect(
+                color = onPrimary,
+                topLeft = Offset(size.width * 0.486f, size.height * 0.56f),
+                size = Size(size.width * 0.028f, size.height * 0.085f),
+                cornerRadius = CornerRadius(size.width * 0.014f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun BrandHeroArtwork() {
+    val primary = MaterialTheme.colorScheme.primary
+    val secondary = MaterialTheme.colorScheme.secondary
+    val surface = MaterialTheme.colorScheme.surface
+    val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1.62f),
+    ) {
+        val radius = size.minDimension * 0.085f
+
+        drawRoundRect(
+            brush = Brush.linearGradient(
+                colors = listOf(
+                    Color(0xFF14251F),
+                    Color(0xFF101720),
+                    Color(0xFF0B0F15),
+                ),
+                start = Offset.Zero,
+                end = Offset(size.width, size.height),
+            ),
+            cornerRadius = CornerRadius(radius),
+        )
+
+        drawCircle(
+            color = primary.copy(alpha = 0.10f),
+            radius = size.minDimension * 0.42f,
+            center = Offset(size.width * 0.16f, size.height * 0.18f),
+        )
+        drawCircle(
+            color = secondary.copy(alpha = 0.08f),
+            radius = size.minDimension * 0.33f,
+            center = Offset(size.width * 0.88f, size.height * 0.72f),
+        )
+
+        val phoneLeft = size.width * 0.12f
+        val phoneTop = size.height * 0.10f
+        val phoneWidth = size.width * 0.48f
+        val phoneHeight = size.height * 0.80f
+
+        drawRoundRect(
+            color = Color(0xFF05080B),
+            topLeft = Offset(phoneLeft, phoneTop),
+            size = Size(phoneWidth, phoneHeight),
+            cornerRadius = CornerRadius(size.minDimension * 0.065f),
+        )
+        drawRoundRect(
+            color = surfaceVariant.copy(alpha = 0.86f),
+            topLeft = Offset(phoneLeft + phoneWidth * 0.055f, phoneTop + phoneHeight * 0.055f),
+            size = Size(phoneWidth * 0.89f, phoneHeight * 0.89f),
+            cornerRadius = CornerRadius(size.minDimension * 0.048f),
+        )
+
+        val screenLeft = phoneLeft + phoneWidth * 0.085f
+        val screenTop = phoneTop + phoneHeight * 0.11f
+        val screenWidth = phoneWidth * 0.83f
+        val screenHeight = phoneHeight * 0.74f
+
+        drawRoundRect(
+            brush = Brush.linearGradient(
+                colors = listOf(
+                    Color(0xFF223B34),
+                    Color(0xFF18242D),
+                ),
+                start = Offset(screenLeft, screenTop),
+                end = Offset(screenLeft + screenWidth, screenTop + screenHeight),
+            ),
+            topLeft = Offset(screenLeft, screenTop),
+            size = Size(screenWidth, screenHeight),
+            cornerRadius = CornerRadius(size.minDimension * 0.035f),
+        )
+
+        drawCircle(
+            color = onSurface.copy(alpha = 0.88f),
+            radius = screenWidth * 0.115f,
+            center = Offset(screenLeft + screenWidth * 0.36f, screenTop + screenHeight * 0.36f),
+        )
+        drawRoundRect(
+            color = primary.copy(alpha = 0.78f),
+            topLeft = Offset(screenLeft + screenWidth * 0.22f, screenTop + screenHeight * 0.51f),
+            size = Size(screenWidth * 0.28f, screenHeight * 0.19f),
+            cornerRadius = CornerRadius(screenWidth * 0.07f),
+        )
+
+        drawCircle(
+            color = secondary.copy(alpha = 0.82f),
+            radius = screenWidth * 0.085f,
+            center = Offset(screenLeft + screenWidth * 0.72f, screenTop + screenHeight * 0.28f),
+        )
+        drawRoundRect(
+            color = onSurfaceVariant.copy(alpha = 0.58f),
+            topLeft = Offset(screenLeft + screenWidth * 0.62f, screenTop + screenHeight * 0.41f),
+            size = Size(screenWidth * 0.20f, screenHeight * 0.14f),
+            cornerRadius = CornerRadius(screenWidth * 0.05f),
+        )
+
+        val shieldCx = size.width * 0.73f
+        val shieldCy = size.height * 0.41f
+        val shieldR = size.minDimension * 0.19f
+        drawCircle(
+            color = primary.copy(alpha = 0.12f),
+            radius = shieldR * 1.34f,
+            center = Offset(shieldCx, shieldCy),
+        )
+        drawCircle(
+            color = primary.copy(alpha = 0.22f),
+            radius = shieldR * 1.06f,
+            center = Offset(shieldCx, shieldCy),
+            style = Stroke(width = size.minDimension * 0.018f),
+        )
+        drawCircle(
+            color = surface,
+            radius = shieldR * 0.84f,
+            center = Offset(shieldCx, shieldCy),
+        )
+
+        val lockStroke = size.minDimension * 0.023f
+        drawArc(
+            color = primary,
+            startAngle = 180f,
+            sweepAngle = 180f,
+            useCenter = false,
+            topLeft = Offset(shieldCx - shieldR * 0.34f, shieldCy - shieldR * 0.48f),
+            size = Size(shieldR * 0.68f, shieldR * 0.72f),
+            style = Stroke(width = lockStroke, cap = StrokeCap.Round),
+        )
+        drawRoundRect(
+            color = primary,
+            topLeft = Offset(shieldCx - shieldR * 0.42f, shieldCy - shieldR * 0.03f),
+            size = Size(shieldR * 0.84f, shieldR * 0.64f),
+            cornerRadius = CornerRadius(shieldR * 0.17f),
+        )
+        drawCircle(
+            color = MaterialTheme.colorScheme.onPrimary,
+            radius = shieldR * 0.075f,
+            center = Offset(shieldCx, shieldCy + shieldR * 0.21f),
+        )
+
+        val fingerX = size.width * 0.82f
+        val fingerY = size.height * 0.73f
+        drawCircle(
+            color = primary.copy(alpha = 0.10f),
+            radius = size.minDimension * 0.18f,
+            center = Offset(fingerX, fingerY),
+        )
+        drawCircle(
+            color = primary.copy(alpha = 0.22f),
+            radius = size.minDimension * 0.125f,
+            center = Offset(fingerX, fingerY),
+            style = Stroke(width = size.minDimension * 0.016f),
+        )
+        drawCircle(
+            color = primary.copy(alpha = 0.52f),
+            radius = size.minDimension * 0.067f,
+            center = Offset(fingerX, fingerY),
+        )
+        drawLine(
+            color = onSurfaceVariant.copy(alpha = 0.50f),
+            start = Offset(size.width * 0.67f, size.height * 0.86f),
+            end = Offset(size.width * 0.93f, size.height * 0.86f),
+            strokeWidth = size.minDimension * 0.015f,
+            cap = StrokeCap.Round,
+        )
     }
 }
 
