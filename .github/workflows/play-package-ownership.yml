@@ -1,0 +1,91 @@
+name: Build package ownership APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-proof:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Require verification snippet
+        shell: bash
+        env:
+          REGISTRATION_SNIPPET: ${{ secrets.ANDROID_DEVELOPER_REGISTRATION_SNIPPET }}
+        run: |
+          if [[ -z "$REGISTRATION_SNIPPET" ]]; then
+            echo "Missing secret ANDROID_DEVELOPER_REGISTRATION_SNIPPET" >&2
+            exit 1
+          fi
+          mkdir -p src/app/src/main/assets
+          printf '%s\n' "$REGISTRATION_SNIPPET" > src/app/src/main/assets/adi-registration.properties
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: ''
+          log-accepted-android-sdk-licenses: false
+
+      - name: Install Android 37 SDK
+        run: sdkmanager --channel=3 "platforms;android-37.0" "build-tools;37.0.0" "platform-tools"
+
+      - name: Set up Gradle 9.6
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: '9.6.0'
+
+      - name: Restore stable signing key
+        shell: bash
+        env:
+          SCREENLOCK_KEYSTORE_B64: ${{ secrets.SCREENLOCK_KEYSTORE_B64 }}
+        run: |
+          if [[ -z "$SCREENLOCK_KEYSTORE_B64" ]]; then
+            echo "Missing SCREENLOCK_KEYSTORE_B64" >&2
+            exit 1
+          fi
+          printf '%s' "$SCREENLOCK_KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/screenlock-release.jks"
+
+      - name: Build signed ownership APK
+        working-directory: src
+        env:
+          SCREENLOCK_KEYSTORE_PATH: ${{ runner.temp }}/screenlock-release.jks
+          SCREENLOCK_KEYSTORE_PASSWORD: ${{ secrets.SCREENLOCK_KEYSTORE_PASSWORD }}
+        run: gradle --no-daemon :app:assembleRelease
+
+      - name: Verify APK signature
+        run: |
+          "$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --print-certs \
+            src/app/build/outputs/apk/release/app-release.apk
+
+      - name: Prepare proof artifact
+        shell: bash
+        env:
+          SCREENLOCK_KEYSTORE_PASSWORD: ${{ secrets.SCREENLOCK_KEYSTORE_PASSWORD }}
+        run: |
+          mkdir -p dist
+          cp src/app/build/outputs/apk/release/app-release.apk dist/screen-lock-package-ownership.apk
+          sha256sum dist/screen-lock-package-ownership.apk > dist/screen-lock-package-ownership.apk.sha256
+          keytool -exportcert -rfc \
+            -keystore "$RUNNER_TEMP/screenlock-release.jks" \
+            -storepass "$SCREENLOCK_KEYSTORE_PASSWORD" \
+            -alias screenlock \
+            -file dist/screen-lock-signing-cert.pem
+
+      - name: Upload private workflow artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: screen-lock-package-ownership
+          path: dist/
+          retention-days: 7
