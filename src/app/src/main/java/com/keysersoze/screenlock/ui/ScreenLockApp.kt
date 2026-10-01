@@ -335,6 +335,7 @@ private fun BrandHeroArtwork() {
     val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
     val onSurface = MaterialTheme.colorScheme.onSurface
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
 
     Canvas(
         modifier = Modifier
@@ -465,7 +466,7 @@ private fun BrandHeroArtwork() {
             cornerRadius = CornerRadius(shieldR * 0.17f),
         )
         drawCircle(
-            color = MaterialTheme.colorScheme.onPrimary,
+            color = onPrimary,
             radius = shieldR * 0.075f,
             center = Offset(shieldCx, shieldCy + shieldR * 0.21f),
         )
