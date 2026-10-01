@@ -1,0 +1,5 @@
+{
+  "title": "Screen Lock",
+  "shortDescription": "Blocca i tocchi accidentali durante videochiamate e chiamate.",
+  "fullDescription": "Screen Lock mantiene visibile e attiva una videochiamata o chiamata mentre blocca i tocchi accidentali sullo schermo.\n\nÈ pensata soprattutto per chi vuole proteggere una chiamata quando il telefono viene tenuto o toccato da un bambino: la chiamata continua normalmente, mentre un overlay locale assorbe i tocchi sull'app sottostante.\n\nFunzioni principali:\n• attivazione rapida dai Comandi rapidi di Android;\n• ritardo di attivazione configurabile;\n• sblocco con pressione prolungata da 2 a 12 secondi;\n• bersaglio di sblocco configurabile per dimensione e posizione;\n• oscuramento opzionale;\n• feedback aptico;\n• interfaccia multilingua.\n\nLa versione Google Play non richiede un account, non contiene pubblicità o analytics, non usa un auto-updater e non legge il contenuto delle altre app."
+}
