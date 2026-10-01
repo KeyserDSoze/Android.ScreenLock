@@ -39,6 +39,26 @@ object AppLocaleManager {
         AppLanguageOption("fa", "فارسی"),
         AppLanguageOption("pl", "Polski"),
         AppLanguageOption("nl", "Nederlands"),
+        AppLanguageOption("th", "ไทย"),
+        AppLanguageOption("ms", "Bahasa Melayu"),
+        AppLanguageOption("sw", "Kiswahili"),
+        AppLanguageOption("ta", "தமிழ்"),
+        AppLanguageOption("te", "తెలుగు"),
+        AppLanguageOption("mr", "मराठी"),
+        AppLanguageOption("pa", "ਪੰਜਾਬੀ"),
+        AppLanguageOption("gu", "ગુજરાતી"),
+        AppLanguageOption("kn", "ಕನ್ನಡ"),
+        AppLanguageOption("ml", "മലയാളം"),
+        AppLanguageOption("my", "မြန်မာ"),
+        AppLanguageOption("ne", "नेपाली"),
+        AppLanguageOption("uk", "Українська"),
+        AppLanguageOption("he", "עברית"),
+        AppLanguageOption("el", "Ελληνικά"),
+        AppLanguageOption("ro", "Română"),
+        AppLanguageOption("cs", "Čeština"),
+        AppLanguageOption("hu", "Magyar"),
+        AppLanguageOption("sv", "Svenska"),
+        AppLanguageOption("ha", "Hausa"),
     )
 
     private val supportedCodes = supportedLanguages.map { it.code }.toSet()
@@ -128,6 +148,26 @@ object AppLocaleManager {
             "fa" -> "fa"
             "pl" -> "pl"
             "nl" -> "nl"
+            "th" -> "th"
+            "ms" -> "ms"
+            "sw" -> "sw"
+            "ta" -> "ta"
+            "te" -> "te"
+            "mr" -> "mr"
+            "pa" -> "pa"
+            "gu" -> "gu"
+            "kn" -> "kn"
+            "ml" -> "ml"
+            "my" -> "my"
+            "ne" -> "ne"
+            "uk" -> "uk"
+            "he", "iw" -> "he"
+            "el" -> "el"
+            "ro" -> "ro"
+            "cs" -> "cs"
+            "hu" -> "hu"
+            "sv" -> "sv"
+            "ha" -> "ha"
             "en" -> "en"
             else -> null
         }
@@ -164,6 +204,26 @@ object AppLocaleManager {
             "fa" -> "fa"
             "pl" -> "pl"
             "nl" -> "nl"
+            "th" -> "th"
+            "ms" -> "ms"
+            "sw" -> "sw"
+            "ta" -> "ta"
+            "te" -> "te"
+            "mr" -> "mr"
+            "pa" -> "pa"
+            "gu" -> "gu"
+            "kn" -> "kn"
+            "ml" -> "ml"
+            "my" -> "my"
+            "ne" -> "ne"
+            "uk" -> "uk"
+            "he", "iw" -> "he"
+            "el" -> "el"
+            "ro" -> "ro"
+            "cs" -> "cs"
+            "hu" -> "hu"
+            "sv" -> "sv"
+            "ha" -> "ha"
             else -> "en"
         }
     }
