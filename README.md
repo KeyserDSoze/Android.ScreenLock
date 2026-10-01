@@ -9,7 +9,7 @@
 3. Quando torni nell'app dopo aver concesso il permesso, su Android 13+ Screen Lock richiede automaticamente di aggiungere il pulsante ai **Comandi rapidi**. Sulle versioni precedenti mostra le istruzioni per aggiungerlo manualmente.
 4. Avvia la chiamata in Telegram (o qualunque altra app), abbassa i Comandi rapidi e tocca **Screen Lock**.
 5. Il pannello viene richiuso; dopo il ritardo configurato (2 secondi di default) parte un foreground service e compare un `TYPE_APPLICATION_OVERLAY` quasi trasparente che assorbe i tocchi e mantiene lo schermo acceso.
-6. Il bersaglio di sblocco è visibile per un istante e poi diventa molto discreto. Per sbloccare, tieni premuto **al centro dello schermo** per il tempo configurato (6 secondi di default). Movimento eccessivo, rilascio o multitouch annullano il conteggio.
+6. Il bersaglio di sblocco è visibile per un istante e poi diventa molto discreto. Posizione e raggio sono configurabili; per sbloccare, tieni premuto sul bersaglio per il tempo configurato (6 secondi di default). Movimento eccessivo, rilascio o multitouch annullano il conteggio.
 7. In impostazioni puoi attivare **Protezione tendina avanzata**. È opzionale e richiede un servizio di Accessibilità separato, limitato agli eventi di `com.android.systemui`: mentre Screen Lock è attivo usa `GLOBAL_ACTION_DISMISS_NOTIFICATION_SHADE` per chiedere ad Android di richiudere notifiche e Comandi rapidi appena si aprono.
 
 ## Limiti Android
@@ -28,15 +28,13 @@ Screen Lock blocca i normali tocchi consegnati alle app sotto l'overlay. Il lock
 
 ## Branding
 
-Le risorse visuali generate per Screen Lock sono conservate nel repository. Gli artwork generati sono conservati nel repository come asset di progetto. Dopo una regressione riscontrata nella v0.0.7, la UI e il launcher runtime sono stati ripristinati alla variante vettoriale stabile; gli asset restano disponibili per una futura reintegrazione dopo test su dispositivo. La tile dei Comandi rapidi resta un'icona vettoriale monocromatica per rispettare il rendering di System UI.
-
-Gli asset Android ottimizzati si trovano in `src/app/src/main/res/drawable-nodpi/`; un concept alternativo è conservato in `assets/branding/`.
+Il rebranding runtime usa solo forme vettoriali disegnate in Jetpack Compose: marchio mint, illustrazione hero della videochiamata e dettagli grafici non dipendono da WebP/JPEG durante l'avvio. Gli artwork raster sperimentali restano nel repository come concept, ma non vengono caricati dall'app. La tile dei Comandi rapidi resta monocromatica per rispettare il rendering di System UI e il launcher resta sulla variante stabile finché il nuovo branding interno non è stato verificato su dispositivo.
 
 ## Punto di sblocco personalizzabile
 
 Il punto di sblocco può essere configurato con un raggio da 40 a 120 dp e posizionato in una griglia 3×3: alto sinistra, alto centro, alto destra, centro sinistra, centro, centro destra, basso sinistra, basso centro e basso destra. L'overlay mantiene automaticamente un margine di sicurezza dai bordi di sistema.
 
-Le immagini generate vengono usate solo all'interno della home dell'app; il launcher resta sulla variante vettoriale stabile per evitare la regressione riscontrata nella v0.0.7.
+Il launcher resta sulla variante vettoriale stabile per evitare la regressione riscontrata nella v0.0.7; il nuovo branding della home è invece interamente vettoriale/Compose.
 
 ## Lingue
 
