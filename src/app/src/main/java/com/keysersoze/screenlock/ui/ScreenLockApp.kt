@@ -916,10 +916,10 @@ private fun SettingsCard(
         )
         Slider(
             value = seconds.toFloat(),
-            onValueChange = { seconds = it.toInt().coerceIn(3, 12) },
+            onValueChange = { seconds = it.roundToInt().coerceIn(2, 12) },
             onValueChangeFinished = { onUnlockSecondsChanged(seconds) },
-            valueRange = 3f..12f,
-            steps = 8,
+            valueRange = 2f..12f,
+            steps = 9,
         )
 
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
