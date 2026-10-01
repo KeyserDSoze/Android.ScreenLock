@@ -23,6 +23,18 @@ The GitHub release workflow exports the public certificate as:
 
 Never commit or upload the private keystore itself to the repository.
 
+## Play-specific build
+
+The Play Store AAB is intentionally stricter than the GitHub APK:
+
+- no `REQUEST_INSTALL_PACKAGES`;
+- no self-updater;
+- no Internet permission;
+- no AccessibilityService / advanced notification-shade protection;
+- base touch lock, Quick Settings tile, configurable unlock target, branding and localization remain available.
+
+This avoids requesting restricted capabilities that are not necessary for the Play-distributed core function.
+
 ## One-time Play Console setup
 
 1. Register or open the Google Play developer account and use **Alessandro Rapiti** as the public developer display name if that is the desired store identity.
@@ -52,12 +64,14 @@ A normal Screen Lock release now does this:
    - installable signed APK;
    - signed release Android App Bundle (`.aab`).
 4. It verifies both signatures.
-5. GitHub Release is created with APK, AAB, checksums, APK certificate report, and public upload certificate.
-6. Publishing the GitHub Release triggers `.github/workflows/play-store.yml`.
-7. If Google Play publishing is enabled, that workflow:
+5. GitHub Release is created with APK, Play-safe AAB, checksums, APK certificate report, and public upload certificate.
+6. A second job in the same release workflow runs after the GitHub Release is created.
+7. If Google Play publishing is enabled, that job:
    - downloads the exact AAB from the GitHub Release;
    - verifies its SHA-256;
    - uploads it to the Google Play **Internal testing** track.
+
+`.github/workflows/play-store.yml` remains available as a manual retry/backfill workflow for an existing tag.
 
 Production publishing is deliberately not automatic. Promote from Internal testing only after device testing and Play Console checks.
 
