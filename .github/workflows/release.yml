@@ -140,9 +140,11 @@ jobs:
             -storepass "$SCREENLOCK_KEYSTORE_PASSWORD" \
             -alias screenlock \
             -file "$CERT"
-          echo "apk=$APK" >> "$GITHUB_OUTPUT"
-          echo "aab=$AAB" >> "$GITHUB_OUTPUT"
-          echo "cert=$CERT" >> "$GITHUB_OUTPUT"
+          {
+            echo "apk=$APK"
+            echo "aab=$AAB"
+            echo "cert=$CERT"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         env:
