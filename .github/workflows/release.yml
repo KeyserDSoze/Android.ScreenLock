@@ -75,7 +75,7 @@ jobs:
           fi
           printf '%s' "$SCREENLOCK_KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/screenlock-release.jks"
 
-      - name: Test and build installable APK
+      - name: Test and build APK + Play App Bundle
         working-directory: src
         env:
           SCREENLOCK_KEYSTORE_PATH: ${{ runner.temp }}/screenlock-release.jks
@@ -85,24 +85,37 @@ jobs:
             echo "Missing repository secret SCREENLOCK_KEYSTORE_PASSWORD" >&2
             exit 1
           fi
-          gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
+          gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:bundleRelease
 
-      - name: Verify APK signing certificate
+      - name: Verify release signatures
         shell: bash
         run: |
-          "$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --print-certs             src/app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --print-certs src/app/build/outputs/apk/debug/app-debug.apk
+          jarsigner -verify -verbose -certs src/app/build/outputs/bundle/release/app-release.aab >/dev/null
 
       - name: Prepare release files
         id: artifact
         shell: bash
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          SCREENLOCK_KEYSTORE_PASSWORD: ${{ secrets.SCREENLOCK_KEYSTORE_PASSWORD }}
         run: |
           APK="screen-lock-v${VERSION}.apk"
+          AAB="screen-lock-v${VERSION}.aab"
+          CERT="screen-lock-upload-cert.pem"
           cp src/app/build/outputs/apk/debug/app-debug.apk "$APK"
+          cp src/app/build/outputs/bundle/release/app-release.aab "$AAB"
           sha256sum "$APK" > "$APK.sha256"
+          sha256sum "$AAB" > "$AAB.sha256"
           "$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --print-certs "$APK" > "$APK.cert.txt"
+          keytool -exportcert -rfc \
+            -keystore "$RUNNER_TEMP/screenlock-release.jks" \
+            -storepass "$SCREENLOCK_KEYSTORE_PASSWORD" \
+            -alias screenlock \
+            -file "$CERT"
           echo "apk=$APK" >> "$GITHUB_OUTPUT"
+          echo "aab=$AAB" >> "$GITHUB_OUTPUT"
+          echo "cert=$CERT" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         env:
@@ -110,9 +123,12 @@ jobs:
           TAG: ${{ steps.version.outputs.tag }}
           VERSION: ${{ steps.version.outputs.version }}
           APK: ${{ steps.artifact.outputs.apk }}
+          AAB: ${{ steps.artifact.outputs.aab }}
+          CERT: ${{ steps.artifact.outputs.cert }}
         run: |
           gh release create "$TAG" \
             "$APK" "$APK.sha256" "$APK.cert.txt" \
+            "$AAB" "$AAB.sha256" "$CERT" \
             --target "$GITHUB_SHA" \
             --title "Screen Lock $VERSION" \
             --generate-notes
