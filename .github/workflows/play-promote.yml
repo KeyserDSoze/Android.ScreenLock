@@ -1,0 +1,121 @@
+name: Promote Google Play release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "GitHub release tag already uploaded to source track, e.g. v0.0.18"
+        required: true
+        type: string
+      source_track:
+        description: "Source Play track"
+        required: true
+        default: internal
+        type: choice
+        options:
+          - internal
+          - alpha
+      target_track:
+        description: "Target Play track"
+        required: true
+        default: alpha
+        type: choice
+        options:
+          - alpha
+          - production
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: google-play-promote
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    if: ${{ vars.GOOGLE_PLAY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    environment: google-play-promote
+
+    steps:
+      - name: Validate requested promotion
+        id: version
+        shell: bash
+        env:
+          TAG: ${{ inputs.tag }}
+          SOURCE: ${{ inputs.source_track }}
+          TARGET: ${{ inputs.target_track }}
+        run: |
+          if [[ ! "$TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "Expected tag like v0.0.18" >&2
+            exit 1
+          fi
+          if [[ "$SOURCE" == "$TARGET" ]]; then
+            echo "Source and target tracks must differ" >&2
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          VERSION_CODE=$((10#$MAJOR * 10000 + 10#$MINOR * 100 + 10#$PATCH))
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+
+      - name: Authenticate to Google Play API
+        id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+
+      - name: Promote exact version code
+        shell: bash
+        env:
+          ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          PACKAGE: com.keysersoze.screenlock
+          SOURCE: ${{ inputs.source_track }}
+          TARGET: ${{ inputs.target_track }}
+          EXPECTED_VERSION_CODE: ${{ steps.version.outputs.version_code }}
+        run: |
+          API="https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE"
+
+          EDIT_JSON="$(curl -fsS -X POST \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{}' "$API/edits")"
+          EDIT_ID="$(printf '%s' "$EDIT_JSON" | jq -r '.id')"
+
+          SOURCE_JSON="$(curl -fsS \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            "$API/edits/$EDIT_ID/tracks/$SOURCE")"
+
+          RELEASE="$(printf '%s' "$SOURCE_JSON" | jq -c \
+            --arg vc "$EXPECTED_VERSION_CODE" \
+            '.releases[]? | select(any(.versionCodes[]?; . == $vc))' | head -n 1)"
+
+          if [[ -z "$RELEASE" ]]; then
+            echo "Version code $EXPECTED_VERSION_CODE was not found on track $SOURCE" >&2
+            exit 1
+          fi
+
+          PROMOTED="$(printf '%s' "$RELEASE" | jq -c \
+            'del(.userFraction, .countryTargeting) | .status = "completed"')"
+
+          BODY="$(jq -n \
+            --arg track "$TARGET" \
+            --argjson release "$PROMOTED" \
+            '{track: $track, releases: [$release]}')"
+
+          curl -fsS -X PUT \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$BODY" \
+            "$API/edits/$EDIT_ID/tracks/$TARGET" >/dev/null
+
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            "$API/edits/$EDIT_ID:commit" >/dev/null
+
+          echo "Promoted version code $EXPECTED_VERSION_CODE from $SOURCE to $TARGET"
