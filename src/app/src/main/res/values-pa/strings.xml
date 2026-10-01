@@ -11,7 +11,7 @@
     <string name="status_overlay_ready">ਓਵਰਲੇ ਇਜਾਜ਼ਤ ਤਿਆਰ</string>
     <string name="status_step1_pending">ਕਦਮ 1 ਪੂਰਾ ਕਰੋ</string>
     <string name="setup_title">ਮਾਰਗਦਰਸ਼ਿਤ ਸੈਟਅੱਪ</string>
-    <string name="setup_step2_desc">2 ਵਿੱਚੋਂ ਕਦਮ 2 · Screen Lock ਨੂੰ Quick Settings ਵਿੱਚ ਸ਼ਾਮਲ ਕਰੋ। Android 13 ਜਾਂ ਨਵੇਂ 'ਤੇ ਸਿਸਟਮ ਬੇਨਤੀ ਸਿੱਧੀ ਦਿਖੇਗੀ।</string>
+    <string name="setup_step2_desc">2 ਵਿੱਚੋਂ ਕਦਮ 2 · Screen Lock ਨੂੰ Quick Settings ਵਿੱਚ ਸ਼ਾਮਲ ਕਰੋ। Android 13 ਜਾਂ ਨਵੇਂ ’ਤੇ ਸਿਸਟਮ ਬੇਨਤੀ ਸਿੱਧੀ ਦਿਖੇਗੀ।</string>
     <string name="setup_step1_desc">2 ਵਿੱਚੋਂ ਕਦਮ 1 · Screen Lock ਨੂੰ ਹੋਰ ਐਪਾਂ ਦੇ ਉੱਪਰ ਦਿਖਾਉਣ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ। ਇਹ ਇਜਾਜ਼ਤ ਟੱਚ ਰੋਕਣ ਲਈ ਵਰਤੀ ਜਾਂਦੀ ਹੈ।</string>
     <string name="setup_allow_overlay">1 · ਹੋਰ ਐਪਾਂ ਦੇ ਉੱਪਰ ਦਿਖਾਉਣ ਦੀ ਇਜਾਜ਼ਤ</string>
     <string name="setup_overlay_base_note">ਬੁਨਿਆਦੀ ਲੌਕ ਲਈ Accessibility ਦੀ ਲੋੜ ਨਹੀਂ। ਉੱਚ ਪੱਧਰੀ ਨੋਟੀਫਿਕੇਸ਼ਨ ਪੈਨਲ ਸੁਰੱਖਿਆ ਲਈ ਇਹ ਸਿਰਫ਼ ਵਿਕਲਪੀ ਹੈ।</string>
@@ -24,7 +24,7 @@
 
 2. “ਹੋਰ ਐਪਾਂ ਦੇ ਉੱਪਰ ਦਿਖਾਓ” ਜਾਂ ਸਮਾਨ ਵਿਕਲਪ ਚਾਲੂ ਕਰੋ।
 
-3. Screen Lock 'ਤੇ ਵਾਪਸ ਆਓ।</string>
+3. Screen Lock ’ਤੇ ਵਾਪਸ ਆਓ।</string>
     <string name="overlay_dialog_note">Android ਮੁਤਾਬਕ ਇਹ ਇਜਾਜ਼ਤ ਤੁਹਾਨੂੰ ਖੁਦ ਚਾਲੂ ਕਰਨੀ ਪੈਂਦੀ ਹੈ। Screen Lock ਇਸਨੂੰ ਸਿਰਫ਼ ਕਾਲ ਉੱਪਰ ਟੱਚ ਲੇਅਰ ਰੱਖਣ ਲਈ ਵਰਤਦਾ ਹੈ; ਸਕ੍ਰੀਨ ਨਹੀਂ ਪੜ੍ਹਦਾ।</string>
     <string name="open_android_setting">Android ਸੈਟਿੰਗ ਖੋਲ੍ਹੋ</string>
     <string name="not_now">ਹੁਣ ਨਹੀਂ</string>
@@ -51,18 +51,18 @@
     <string name="immediately">ਤੁਰੰਤ</string>
     <string name="seconds_format">%1$d ਸਕਿੰਟ</string>
     <string name="unlock_title">ਅਨਲੌਕ</string>
-    <string name="unlock_desc">ਦਬਾਅ ਅਨਲੌਕ ਟਾਰਗਟ 'ਤੇ ਸ਼ੁਰੂ ਹੋਣਾ ਅਤੇ ਲਗਭਗ ਅਡੋਲ ਰਹਿਣਾ ਚਾਹੀਦਾ ਹੈ। ਦੂਜੀ ਉਂਗਲ, ਵੱਧ ਹਿਲਣਾ ਜਾਂ ਛੱਡਣਾ ਕਾਊਂਟਡਾਊਨ ਰੱਦ ਕਰਦਾ ਹੈ।</string>
+    <string name="unlock_desc">ਦਬਾਅ ਅਨਲੌਕ ਟਾਰਗਟ ’ਤੇ ਸ਼ੁਰੂ ਹੋਣਾ ਅਤੇ ਲਗਭਗ ਅਡੋਲ ਰਹਿਣਾ ਚਾਹੀਦਾ ਹੈ। ਦੂਜੀ ਉਂਗਲ, ਵੱਧ ਹਿਲਣਾ ਜਾਂ ਛੱਡਣਾ ਕਾਊਂਟਡਾਊਨ ਰੱਦ ਕਰਦਾ ਹੈ।</string>
     <string name="long_press">ਲੰਮਾ ਦਬਾਅ</string>
     <string name="overlay_dimming">ਓਵਰਲੇ ਡਿਮਿੰਗ</string>
     <string name="percent_format">%1$d%%</string>
-    <string name="video_call_unchanged">0–10% 'ਤੇ ਵੀਡੀਓ ਕਾਲ ਲਗਭਗ ਬਿਨਾਂ ਬਦਲਾਅ ਰਹਿੰਦੀ ਹੈ।</string>
+    <string name="video_call_unchanged">0–10% ’ਤੇ ਵੀਡੀਓ ਕਾਲ ਲਗਭਗ ਬਿਨਾਂ ਬਦਲਾਅ ਰਹਿੰਦੀ ਹੈ।</string>
     <string name="shade_protection_title">ਉੱਚ ਪੱਧਰੀ ਨੋਟੀਫਿਕੇਸ਼ਨ ਪੈਨਲ ਸੁਰੱਖਿਆ</string>
     <string name="shade_protection_enabled_desc">Screen Lock ਸਰਗਰਮ ਹੋਣ ਵੇਲੇ Android ਨੂੰ ਨੋਟੀਫਿਕੇਸ਼ਨ ਅਤੇ Quick Settings ਤੁਰੰਤ ਬੰਦ ਕਰਨ ਲਈ ਕਹਿੰਦਾ ਹੈ।</string>
     <string name="shade_protection_disabled_desc">Accessibility ਵਿੱਚ ਵਿਕਲਪੀ ਸੈਟਅੱਪ ਲੋੜੀਂਦਾ ਹੈ। ਕੀ ਅਤੇ ਕਿਉਂ ਚਾਲੂ ਕਰਨਾ ਹੈ ਵੇਖਣ ਲਈ ਟੈਪ ਕਰੋ।</string>
     <string name="show_hint_title">ਅਨਲੌਕ ਸੰਕੇਤ ਦਿਖਾਓ</string>
     <string name="show_hint_desc">ਸਰਗਰਮ ਕਰਦੇ ਸਮੇਂ ਅਨਲੌਕ ਟਾਰਗਟ ਦਿਖਾਉਂਦਾ ਹੈ; ਫਿਰ ਮੰਦ ਹੋ ਜਾਂਦਾ ਅਤੇ ਦਬਾਉਣ ਵੇਲੇ ਮੁੜ ਦਿਖਦਾ ਹੈ।</string>
     <string name="haptics_title">ਹੈਪਟਿਕ ਫੀਡਬੈਕ</string>
-    <string name="haptics_desc">ਅਨਲੌਕ ਸ਼ੁਰੂ ਅਤੇ ਪੂਰਾ ਹੋਣ 'ਤੇ ਹਲਕੀ ਕੰਪਨ।</string>
+    <string name="haptics_desc">ਅਨਲੌਕ ਸ਼ੁਰੂ ਅਤੇ ਪੂਰਾ ਹੋਣ ’ਤੇ ਹਲਕੀ ਕੰਪਨ।</string>
     <string name="privacy_title">ਡਿਜ਼ਾਈਨ ਤੋਂ ਹੀ ਪਰਦੇਦਾਰੀ</string>
     <string name="privacy_body1">ਕੋਈ ਖਾਤਾ ਨਹੀਂ ਅਤੇ ਸਕ੍ਰੀਨ ਸਮੱਗਰੀ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ ਨਹੀਂ। ਇੰਟਰਨੈੱਟ ਸਿਰਫ਼ ਅਧਿਕਾਰਤ GitHub ਰਿਲੀਜ਼ ਚੈੱਕ ਅਤੇ ਡਾਊਨਲੋਡ ਕਰਨ ਲਈ ਵਰਤਿਆ ਜਾਂਦਾ ਹੈ। ਲੋਕਲ ਓਵਰਲੇ ਸਕ੍ਰੀਨ ਪੜ੍ਹੇ ਬਿਨਾਂ ਟੱਚ ਲੈਂਦਾ ਹੈ।</string>
     <string name="privacy_body2">ਆਮ ਲੌਕ ਮਹੱਤਵਪੂਰਨ ਸਿਸਟਮ ਵਿੰਡੋਜ਼ ਤੋਂ ਹੇਠਾਂ ਰਹਿੰਦਾ ਹੈ। ਉੱਚ ਸੁਰੱਖਿਆ Android ਨੂੰ ਨੋਟੀਫਿਕੇਸ਼ਨ ਅਤੇ Quick Settings ਬੰਦ ਕਰਨ ਲਈ ਕਹਿ ਸਕਦੀ ਹੈ, ਪਰ ਪਾਵਰ, ਐਮਰਜੈਂਸੀ UI ਅਤੇ ਹੋਰ ਸੁਰੱਖਿਆ ਹਿੱਸੇ Android ਦੇ ਨਿਯੰਤਰਣ ਹੇਠ ਰਹਿੰਦੇ ਹਨ।</string>
