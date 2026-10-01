@@ -163,6 +163,7 @@ fun ScreenLockApp(
                 item {
                     SetupCard(
                         enabled = overlayEnabled,
+                        showShadeProtection = showShadeProtection,
                         tileMessage = tileMessage,
                         onEnableOverlay = onEnableOverlay,
                         onAddQuickTile = onAddQuickTile,
@@ -209,7 +210,7 @@ fun ScreenLockApp(
                         onShadeProtectionChanged = onShadeProtectionChanged,
                     )
                 }
-                item { PrivacyCard() }
+                item { PrivacyCard(showDistributionFeatures = showUpdater || showShadeProtection) }
                 item {
                     Text(
                         text = stringResource(R.string.footer),
@@ -594,6 +595,7 @@ private fun LanguageCard(
 @Composable
 private fun SetupCard(
     enabled: Boolean,
+    showShadeProtection: Boolean,
     tileMessage: String?,
     onEnableOverlay: () -> Unit,
     onAddQuickTile: () -> Unit,
@@ -624,11 +626,13 @@ private fun SetupCard(
             ) {
                 Text(stringResource(R.string.setup_allow_overlay))
             }
-            Text(
-                text = stringResource(R.string.setup_overlay_base_note),
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
-                style = MaterialTheme.typography.bodySmall,
-            )
+            if (showShadeProtection) {
+                Text(
+                    text = stringResource(R.string.setup_overlay_base_note),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
         } else {
             Button(
                 modifier = Modifier.fillMaxWidth(),
@@ -1116,7 +1120,7 @@ private fun unlockPositionLabel(position: UnlockTargetPosition): String =
     )
 
 @Composable
-private fun PrivacyCard() {
+private fun PrivacyCard(showDistributionFeatures: Boolean) {
     AppCard {
         Text(
             text = stringResource(R.string.privacy_title),
@@ -1128,11 +1132,13 @@ private fun PrivacyCard() {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
         )
-        Text(
-            text = stringResource(R.string.privacy_body2),
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
-            style = MaterialTheme.typography.bodySmall,
-        )
+        if (showDistributionFeatures) {
+            Text(
+                text = stringResource(R.string.privacy_body2),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
     }
 }
 
