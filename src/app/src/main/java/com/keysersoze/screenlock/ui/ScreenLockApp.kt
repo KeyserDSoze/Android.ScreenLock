@@ -66,6 +66,8 @@ import com.keysersoze.screenlock.UpdateInfo
 fun ScreenLockApp(
     overlayEnabled: Boolean,
     showOverlayHelp: Boolean,
+    showUpdater: Boolean,
+    showShadeProtection: Boolean,
     showShadeProtectionHelp: Boolean,
     activationDelaySeconds: Int,
     unlockSeconds: Int,
@@ -74,6 +76,7 @@ fun ScreenLockApp(
     dimPercent: Int,
     showHint: Boolean,
     haptics: Boolean,
+    showShadeProtection: Boolean,
     shadeProtectionEnabled: Boolean,
     shadeAccessibilityEnabled: Boolean,
     shadeProtectionMessage: String?,
@@ -116,7 +119,7 @@ fun ScreenLockApp(
         )
     }
 
-    if (showShadeProtectionHelp) {
+    if (showShadeProtection && showShadeProtectionHelp) {
         ShadeProtectionHelpDialog(
             onDismiss = onDismissShadeProtectionHelp,
             onOpenAccessibility = onOpenShadeAccessibility,
@@ -166,20 +169,22 @@ fun ScreenLockApp(
                         onTestLock = onTestLock,
                     )
                 }
-                item {
-                    UpdateCard(
-                        currentVersion = currentVersion,
-                        updateInfo = updateInfo,
-                        checking = updateChecking,
-                        downloading = updateDownloading,
-                        ready = updateReady,
-                        autoUpdates = autoUpdates,
-                        message = updateMessage,
-                        onAutoUpdatesChanged = onAutoUpdatesChanged,
-                        onCheck = onCheckUpdates,
-                        onDownload = onDownloadUpdate,
-                        onInstall = onInstallUpdate,
-                    )
+                if (showUpdater) {
+                    item {
+                        UpdateCard(
+                            currentVersion = currentVersion,
+                            updateInfo = updateInfo,
+                            checking = updateChecking,
+                            downloading = updateDownloading,
+                            ready = updateReady,
+                            autoUpdates = autoUpdates,
+                            message = updateMessage,
+                            onAutoUpdatesChanged = onAutoUpdatesChanged,
+                            onCheck = onCheckUpdates,
+                            onDownload = onDownloadUpdate,
+                            onInstall = onInstallUpdate,
+                        )
+                    }
                 }
                 item {
                     SettingsCard(
@@ -190,6 +195,7 @@ fun ScreenLockApp(
                         dimPercent = dimPercent,
                         showHint = showHint,
                         haptics = haptics,
+                        showShadeProtection = showShadeProtection,
                         shadeProtectionEnabled = shadeProtectionEnabled,
                         shadeAccessibilityEnabled = shadeAccessibilityEnabled,
                         shadeProtectionMessage = shadeProtectionMessage,
@@ -982,25 +988,27 @@ private fun SettingsCard(
             style = MaterialTheme.typography.bodySmall,
         )
 
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
+        if (showShadeProtection) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
 
-        SwitchRow(
-            title = stringResource(R.string.shade_protection_title),
-            subtitle = if (shadeAccessibilityEnabled) {
-                stringResource(R.string.shade_protection_enabled_desc)
-            } else {
-                stringResource(R.string.shade_protection_disabled_desc)
-            },
-            checked = shadeProtectionEnabled,
-            onCheckedChange = onShadeProtectionChanged,
-        )
-
-        AnimatedVisibility(visible = shadeProtectionMessage != null) {
-            Text(
-                text = shadeProtectionMessage.orEmpty(),
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodySmall,
+            SwitchRow(
+                title = stringResource(R.string.shade_protection_title),
+                subtitle = if (shadeAccessibilityEnabled) {
+                    stringResource(R.string.shade_protection_enabled_desc)
+                } else {
+                    stringResource(R.string.shade_protection_disabled_desc)
+                },
+                checked = shadeProtectionEnabled,
+                onCheckedChange = onShadeProtectionChanged,
             )
+
+            AnimatedVisibility(visible = shadeProtectionMessage != null) {
+                Text(
+                    text = shadeProtectionMessage.orEmpty(),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
         }
 
         SwitchRow(
