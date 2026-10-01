@@ -47,12 +47,14 @@ android {
 
     buildTypes {
         debug {
+            buildConfigField("boolean", "ENABLE_GITHUB_DISTRIBUTION_FEATURES", "true")
             if (signingConfigs.names.contains("stableRelease")) {
                 signingConfig = signingConfigs.getByName("stableRelease")
             }
         }
 
         release {
+            buildConfigField("boolean", "ENABLE_GITHUB_DISTRIBUTION_FEATURES", "false")
             if (signingConfigs.names.contains("stableRelease")) {
                 signingConfig = signingConfigs.getByName("stableRelease")
             }
