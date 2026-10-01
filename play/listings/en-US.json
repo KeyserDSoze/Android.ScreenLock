@@ -1,0 +1,5 @@
+{
+  "title": "Screen Lock",
+  "shortDescription": "Block accidental touches during video and voice calls.",
+  "fullDescription": "Screen Lock keeps a video or voice call visible and active while blocking accidental touches on the screen.\n\nIt is especially useful when a child is holding or touching the phone during a call with family: the call stays active while a local overlay absorbs touches intended for the app underneath.\n\nMain features:\n• quick activation from Android Quick Settings;\n• configurable activation delay;\n• long-press unlock from 2 to 12 seconds;\n• configurable unlock-target size and position;\n• optional dimming;\n• haptic feedback;\n• multilingual interface.\n\nThe Google Play version requires no account, contains no advertising or analytics, has no self-updater, and does not read the content of other apps."
+}
