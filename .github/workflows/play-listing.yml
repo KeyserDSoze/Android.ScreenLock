@@ -1,0 +1,63 @@
+name: Sync Google Play listing
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: google-play-listing
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: ${{ vars.GOOGLE_PLAY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    environment: google-play
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Authenticate to Google Play API
+        id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+
+      - name: Update store listings
+        shell: bash
+        env:
+          ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          PACKAGE: com.keysersoze.screenlock
+        run: |
+          API="https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE"
+
+          EDIT_JSON="$(curl -fsS -X POST \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{}' "$API/edits")"
+          EDIT_ID="$(printf '%s' "$EDIT_JSON" | jq -r '.id')"
+
+          for LANG in it-IT en-US; do
+            FILE="play/listings/$LANG.json"
+            jq -e '.title and .shortDescription and .fullDescription' "$FILE" >/dev/null
+
+            curl -fsS -X PUT \
+              -H "Authorization: Bearer $ACCESS_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data-binary "@$FILE" \
+              "$API/edits/$EDIT_ID/listings/$LANG" >/dev/null
+          done
+
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            "$API/edits/$EDIT_ID:commit" >/dev/null
+
+          echo "Updated it-IT and en-US Play Store listings."
