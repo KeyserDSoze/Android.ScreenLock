@@ -1,0 +1,9 @@
+{
+  "name": "Screen Lock",
+  "short_name": "Screen Lock",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0b0e16",
+  "theme_color": "#3d63ff",
+  "icons": []
+}

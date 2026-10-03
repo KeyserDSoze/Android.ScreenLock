@@ -77,7 +77,7 @@ Before submitting, confirm that no future SDK/dependency has introduced collecti
 
 Privacy policy:
 
-`https://github.com/KeyserDSoze/Android.ScreenLock/blob/main/PRIVACY.md`
+`https://keyserdsoze.github.io/Android.ScreenLock/privacy/`
 
 ## Target audience
 

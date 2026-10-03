@@ -7,7 +7,9 @@
 - Developer display name: **Alessandro Rapiti**
 - Suggested category: Tools
 - Distribution model: Free
-- Privacy policy: `PRIVACY.md`
+- Privacy policy: `https://keyserdsoze.github.io/Android.ScreenLock/privacy/`
+- Terms: `https://keyserdsoze.github.io/Android.ScreenLock/terms/`
+- Contact/support: `https://keyserdsoze.github.io/Android.ScreenLock/contact/`
 
 The developer display name is configured in the Google Play developer account, not in the Android manifest.
 
