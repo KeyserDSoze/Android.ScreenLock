@@ -44,6 +44,17 @@ Lingue incluse (40): English, Italiano, Español, Français, Deutsch, Português
 
 La localizzazione copre UI principale, onboarding, updater, notifiche del foreground service, testo di sblocco, tile dei Comandi rapidi e descrizioni del servizio opzionale di Accessibilità.
 
+## Sito web
+
+Il sito vetrina ufficiale è pubblicato con GitHub Pages:
+
+- Home: https://keyserdsoze.github.io/Android.ScreenLock/
+- Privacy: https://keyserdsoze.github.io/Android.ScreenLock/privacy/
+- Termini: https://keyserdsoze.github.io/Android.ScreenLock/terms/
+- Contatti: https://keyserdsoze.github.io/Android.ScreenLock/contact/
+
+La web app React vive in `src/overviewapp/`, supporta tema chiaro/scuro e le stesse 40 lingue dell'app Android. La workflow `.github/workflows/overview-pages.yml` ricompila e pubblica il sito quando cambia la web app.
+
 ## Google Play
 
 La pipeline genera due distribuzioni con lo stesso package e la stessa identità di firma:
@@ -55,7 +66,9 @@ Documentazione di pubblicazione:
 
 - [PLAY_STORE.md](PLAY_STORE.md) — setup una tantum, firma Play e pipeline.
 - [PLAY_CONSOLE_ANSWERS.md](PLAY_CONSOLE_ANSWERS.md) — risposte preparate per Data safety, App access, foreground service, listing e reviewer.
-- [PRIVACY.md](PRIVACY.md) — privacy policy pubblica.
+- [Privacy Policy](https://keyserdsoze.github.io/Android.ScreenLock/privacy/) — policy pubblica usabile nel Play Console.
+- [Terms & Conditions](https://keyserdsoze.github.io/Android.ScreenLock/terms/) — termini d'uso.
+- [Contact](https://keyserdsoze.github.io/Android.ScreenLock/contact/) — supporto e riferimenti.
 
 La pubblicazione automatica è intenzionalmente limitata al track **Internal testing** e si attiva soltanto dopo aver configurato il Play Console e la variabile GitHub `GOOGLE_PLAY_ENABLED=true`.
 
