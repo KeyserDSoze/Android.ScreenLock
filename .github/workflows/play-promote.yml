@@ -75,7 +75,7 @@ jobs:
         shell: bash
         env:
           ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
-          PACKAGE: com.keysersoze.screenlock
+          PACKAGE: com.keyserdsoze.screenlock
           SOURCE: ${{ inputs.source_track }}
           TARGET: ${{ inputs.target_track }}
           EXPECTED_VERSION_CODE: ${{ steps.version.outputs.version_code }}

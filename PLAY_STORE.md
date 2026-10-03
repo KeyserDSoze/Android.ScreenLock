@@ -3,7 +3,7 @@
 ## App identity
 
 - App name: **Screen Lock**
-- Package name: `com.keysersoze.screenlock`
+- Package name: `com.keyserdsoze.screenlock`
 - Developer display name: **Alessandro Rapiti**
 - Suggested category: Tools
 - Distribution model: Free
@@ -52,7 +52,7 @@ Current Google Play requirements to plan for:
 3. Complete identity verification and, for a new personal account, Android-device verification.
 4. Create the app:
    - name: **Screen Lock**
-   - package: `com.keysersoze.screenlock`
+   - package: `com.keyserdsoze.screenlock`
    - app, not game
    - free
    - default language: Italian or English, according to the desired primary listing.

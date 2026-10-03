@@ -1,4 +1,4 @@
-package com.keysersoze.screenlock.ui
+package com.keyserdsoze.screenlock.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
@@ -57,10 +57,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
-import com.keysersoze.screenlock.AppLanguageOption
-import com.keysersoze.screenlock.R
-import com.keysersoze.screenlock.UnlockTargetPosition
-import com.keysersoze.screenlock.UpdateInfo
+import com.keyserdsoze.screenlock.AppLanguageOption
+import com.keyserdsoze.screenlock.R
+import com.keyserdsoze.screenlock.UnlockTargetPosition
+import com.keyserdsoze.screenlock.UpdateInfo
 
 @Composable
 fun ScreenLockApp(

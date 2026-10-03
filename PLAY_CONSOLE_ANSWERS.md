@@ -5,7 +5,7 @@ This document is a submission worksheet for **Screen Lock**.
 ## Identity
 
 - App name: **Screen Lock**
-- Package: `com.keysersoze.screenlock`
+- Package: `com.keyserdsoze.screenlock`
 - Developer display name: **Alessandro Rapiti**
 - App type: App
 - Pricing: Free

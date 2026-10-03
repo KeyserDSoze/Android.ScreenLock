@@ -1,4 +1,4 @@
-package com.keysersoze.screenlock
+package com.keyserdsoze.screenlock
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

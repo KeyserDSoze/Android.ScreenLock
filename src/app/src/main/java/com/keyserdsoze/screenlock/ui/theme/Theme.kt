@@ -1,4 +1,4 @@
-package com.keysersoze.screenlock.ui.theme
+package com.keyserdsoze.screenlock.ui.theme
 
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme

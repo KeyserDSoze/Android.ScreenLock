@@ -1,4 +1,4 @@
-package com.keysersoze.screenlock
+package com.keyserdsoze.screenlock
 
 import android.app.DownloadManager
 import android.app.StatusBarManager
@@ -19,8 +19,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
-import com.keysersoze.screenlock.ui.ScreenLockApp
-import com.keysersoze.screenlock.ui.theme.ScreenLockTheme
+import com.keyserdsoze.screenlock.ui.ScreenLockApp
+import com.keyserdsoze.screenlock.ui.theme.ScreenLockTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
