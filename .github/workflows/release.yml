@@ -199,7 +199,7 @@ jobs:
         uses: r0adkll/upload-google-play@v1.1.5
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: com.keysersoze.screenlock
+          packageName: com.keyserdsoze.screenlock
           releaseFiles: dist/screen-lock-v${{ needs.release.outputs.version }}.aab
           tracks: ${{ vars.GOOGLE_PLAY_AUTO_TRACKS || 'internal' }}
           status: completed

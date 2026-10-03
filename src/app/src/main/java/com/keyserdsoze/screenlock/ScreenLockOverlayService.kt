@@ -1,4 +1,4 @@
-package com.keysersoze.screenlock
+package com.keyserdsoze.screenlock
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -477,9 +477,9 @@ class ScreenLockOverlayService : Service() {
     }
 
     companion object {
-        const val ACTION_LOCK = "com.keysersoze.screenlock.action.LOCK"
-        const val ACTION_UNLOCK = "com.keysersoze.screenlock.action.UNLOCK"
-        const val ACTION_TOGGLE = "com.keysersoze.screenlock.action.TOGGLE"
+        const val ACTION_LOCK = "com.keyserdsoze.screenlock.action.LOCK"
+        const val ACTION_UNLOCK = "com.keyserdsoze.screenlock.action.UNLOCK"
+        const val ACTION_TOGGLE = "com.keyserdsoze.screenlock.action.TOGGLE"
 
         private const val NOTIFICATION_CHANNEL_ID = "screen_lock_active"
         private const val NOTIFICATION_ID = 1001

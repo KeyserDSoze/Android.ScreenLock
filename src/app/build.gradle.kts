@@ -11,11 +11,11 @@ val signingKeyPath = System.getenv("SCREENLOCK_KEYSTORE_PATH")
 val signingKeyPassword = System.getenv("SCREENLOCK_KEYSTORE_PASSWORD")
 
 android {
-    namespace = "com.keysersoze.screenlock"
+    namespace = "com.keyserdsoze.screenlock"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.keysersoze.screenlock"
+        applicationId = "com.keyserdsoze.screenlock"
         minSdk = 26
         targetSdk = 37
         versionCode = versionParts[0] * 10_000 + versionParts[1] * 100 + versionParts[2]

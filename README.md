@@ -110,7 +110,7 @@ La pipeline richiede una keystore stabile tramite i GitHub Secrets `SCREENLOCK_K
 └── src/
     ├── app/
     │   └── src/main/
-    │       ├── java/com/keysersoze/screenlock/
+    │       ├── java/com/keyserdsoze/screenlock/
     │       └── res/
     ├── build.gradle.kts
     ├── gradle.properties

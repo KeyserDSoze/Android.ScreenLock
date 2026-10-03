@@ -1,4 +1,4 @@
-package com.keysersoze.screenlock
+package com.keyserdsoze.screenlock
 
 import android.accessibilityservice.AccessibilityService
 import android.os.Build

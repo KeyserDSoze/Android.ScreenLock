@@ -1,4 +1,4 @@
-package com.keysersoze.screenlock
+package com.keyserdsoze.screenlock
 
 import android.app.PendingIntent
 import android.content.Context

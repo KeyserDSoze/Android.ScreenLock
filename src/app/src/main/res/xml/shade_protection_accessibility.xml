@@ -6,4 +6,4 @@
     android:description="@string/shade_protection_accessibility_description"
     android:notificationTimeout="50"
     android:packageNames="com.android.systemui"
-    android:settingsActivity="com.keysersoze.screenlock.MainActivity" />
+    android:settingsActivity="com.keyserdsoze.screenlock.MainActivity" />
